@@ -11,3 +11,5 @@ Route::get('/login', function () {
 });
 
 Route::view('/dashboard', 'pages.dashboard');
+Route::view('/profile', 'pages.profile')->name('profile');
+Route::view('/account', 'pages.account')->name('account');

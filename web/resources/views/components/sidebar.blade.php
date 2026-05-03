@@ -46,7 +46,7 @@
             </li>
 
             <li>
-                <a href="#"
+                <a href="{{ route('account') }}"
                    class="flex items-center gap-4 px-4 py-3.5 text-white/85 hover:bg-white/15 hover:text-white rounded-xl transition-all">
                     <i data-lucide="users" class="w-5 h-5"></i>
                     <span class="text-sm tracking-wide">Kelola Pengguna</span>

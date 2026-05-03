@@ -16,7 +16,7 @@
     </style>
 </head>
 
-<body class="bg-slate-50 antialiased" x-data="{ sidebarOpen: true }">
+<body class="bg-slate-50 antialiased m-0" x-data="{ sidebarOpen: true }">
 
     @include('components.sidebar')
     @include('components.navbar')
