@@ -8,7 +8,6 @@ class DataCollectorBuyer extends Model
 {
     protected $table = 'data_collector_buyer';
 
-    public $timestamps = false;
 
     protected $fillable = [
         'name',

@@ -8,8 +8,6 @@ class UnitMeasured extends Model
 {
     protected $table = 'unit_measured';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'name',
         'type',

@@ -8,8 +8,6 @@ class ProcessedWasteData extends Model
 {
     protected $table = 'processed_waste_data';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'id_processed_waste',
         'id_user',

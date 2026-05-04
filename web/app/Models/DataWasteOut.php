@@ -8,7 +8,6 @@ class DataWasteOut extends Model
 {
     protected $table = 'data_waste_out';
 
-    public $timestamps = false;
 
     protected $fillable = [
         'id_waste_out_data',

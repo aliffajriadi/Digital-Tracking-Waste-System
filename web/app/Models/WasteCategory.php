@@ -8,7 +8,6 @@ class WasteCategory extends Model
 {
     protected $table = 'waste_category';
 
-    public $timestamps = false;
 
     protected $fillable = [
         'name',

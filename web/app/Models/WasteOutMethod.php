@@ -8,8 +8,6 @@ class WasteOutMethod extends Model
 {
     protected $table = 'waste_out_method';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'name',
         'description',

@@ -8,8 +8,6 @@ class PicDetail extends Model
 {
     protected $table = 'pic_detail';
 
-    public $timestamps = false;
-
     protected $primaryKey = 'id_user';
 
     public $incrementing = false;

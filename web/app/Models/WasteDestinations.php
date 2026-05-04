@@ -8,8 +8,6 @@ class WasteDestinations extends Model
 {
     protected $table = 'waste_destinations';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'name',
         'location',

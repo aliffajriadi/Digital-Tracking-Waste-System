@@ -8,8 +8,6 @@ class WasteSellingData extends Model
 {
     protected $table = 'waste_selling_data';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'id_waste_out_data',
         'total_revenue',
