@@ -8,6 +8,8 @@ class WasteB3Detail extends Model
 {
     protected $table = 'waste_b3_detail';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'waste_code',
         'description',

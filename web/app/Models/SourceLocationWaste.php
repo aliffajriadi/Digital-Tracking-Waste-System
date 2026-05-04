@@ -8,6 +8,8 @@ class SourceLocationWaste extends Model
 {
     protected $table = 'source_location_waste';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'name',
         'address',

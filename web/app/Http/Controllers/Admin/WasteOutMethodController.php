@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\WasteOutMethod;
+use Illuminate\Http\Request;
+
+class WasteOutMethodController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = WasteOutMethod::withCount('wasteOutData');
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        $methods = $query->paginate(10)->withQueryString();
+        return view('pages.waste-out-method.index', compact('methods'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name'        => ['required', 'string', 'max:100', 'unique:waste_out_method,name'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        WasteOutMethod::create($validated);
+        return back()->with('success', 'Metode keluar sampah berhasil ditambahkan.');
+    }
+
+    public function update(Request $request, WasteOutMethod $wasteOutMethod)
+    {
+        $validated = $request->validate([
+            'name'        => ['required', 'string', 'max:100', "unique:waste_out_method,name,{$wasteOutMethod->id}"],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $wasteOutMethod->update($validated);
+        return back()->with('success', 'Metode keluar sampah berhasil diperbarui.');
+    }
+
+    public function destroy(WasteOutMethod $wasteOutMethod)
+    {
+        if ($wasteOutMethod->wasteOutData()->count() > 0) {
+            return back()->with('error', 'Metode tidak dapat dihapus karena sudah digunakan pada data sampah keluar.');
+        }
+
+        $wasteOutMethod->delete();
+        return back()->with('success', 'Metode keluar sampah berhasil dihapus.');
+    }
+}

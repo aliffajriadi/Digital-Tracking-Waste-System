@@ -4,9 +4,9 @@
 
     <div class="h-20 flex items-center px-6 border-b border-white/20">
         <div class="flex items-center gap-3">
-            <img src="{{ asset('images/Politeknik_Negeri_Batam.png') }}"
+            <img src="{{ asset('images/01_Logo_Polibatam.png') }}"
                  alt="Logo Polibatam"
-                 class="h-10 w-10 object-contain bg-white rounded-xl p-1">
+                 class="h-10 w-10 object-contain rounded-xl p-1">
             <div>
                 <h2 class="text-sm font-bold tracking-wide leading-tight">WasteTracking</h2>
                 <p class="text-[11px] font-medium text-white/75 leading-tight">Admin Panel</p>

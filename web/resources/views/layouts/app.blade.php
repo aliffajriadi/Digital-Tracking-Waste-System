@@ -146,6 +146,14 @@
                     </a>
                 </li>
 
+                <li>
+                    <a href="{{ route('admin.waste-out-method.index') }}"
+                       class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-white/80 hover:bg-white/15 hover:text-white transition-all text-sm font-medium {{ request()->routeIs('admin.waste-out-method.*') ? 'sidebar-link-active' : '' }}">
+                        <i data-lucide="send" class="w-4 h-4 flex-shrink-0"></i>
+                        <span>Metode Keluar</span>
+                    </a>
+                </li>
+
                 <!-- Separator -->
                 <li class="pt-3 pb-1">
                     <p class="px-4 text-[9px] font-bold text-white/40 uppercase tracking-[0.15em]">Monitoring</p>

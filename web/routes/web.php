@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\SourceLocationController;
 use App\Http\Controllers\Admin\CollectorBuyerController;
 use App\Http\Controllers\Admin\WasteEntryController;
 use App\Http\Controllers\Admin\WasteOutController;
+use App\Http\Controllers\Admin\WasteOutMethodController;
 use App\Http\Controllers\Admin\ProcessedWasteDataController;
 use App\Http\Controllers\Admin\ReportController;
 
@@ -22,6 +23,7 @@ use App\Http\Controllers\Admin\ReportController;
 | Auth Routes
 |--------------------------------------------------------------------------
 */
+
 Route::middleware('guest')->group(function () {
     Route::get('/', fn() => redirect()->route('login'));
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -57,11 +59,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::resource('unit-measured', UnitMeasuredController::class);
     Route::resource('source-location', SourceLocationController::class);
     Route::resource('collector-buyer', CollectorBuyerController::class);
+    Route::resource('waste-out-method', WasteOutMethodController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Monitoring
     Route::resource('waste-entry', WasteEntryController::class)->only(['index', 'show']);
     Route::resource('waste-out', WasteOutController::class)->only(['index', 'show']);
     Route::resource('processed-waste-data', ProcessedWasteDataController::class)->only(['index', 'show']);
     Route::resource('report', ReportController::class)->only(['index', 'show']);
-
 });
