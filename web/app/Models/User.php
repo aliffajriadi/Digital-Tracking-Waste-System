@@ -28,13 +28,24 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
+            'password'  => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
     public function role()
     {
         return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function adminDetail()
+    {
+        return $this->hasOne(AdminDetail::class, 'id_user');
+    }
+
+    public function picDetail()
+    {
+        return $this->hasOne(PicDetail::class, 'id_user');
     }
 
     public function wasteEntries()

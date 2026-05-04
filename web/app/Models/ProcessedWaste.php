@@ -21,6 +21,11 @@ class ProcessedWaste extends Model
         return $this->belongsTo(UnitMeasured::class, 'id_unit_measured');
     }
 
+    public function unitMeasured()
+    {
+        return $this->belongsTo(UnitMeasured::class, 'id_unit_measured');
+    }
+
     public function processedWasteData()
     {
         return $this->hasMany(ProcessedWasteData::class, 'id_processed_waste');

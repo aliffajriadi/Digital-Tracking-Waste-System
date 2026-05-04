@@ -10,6 +10,7 @@ class SourceLocationWaste extends Model
 
     protected $fillable = [
         'name',
+        'address',
         'photo',
     ];
 

@@ -24,4 +24,9 @@ class Report extends Model
     {
         return $this->belongsTo(CategoryReport::class, 'id_category_report');
     }
+
+    public function categoryReport()
+    {
+        return $this->belongsTo(CategoryReport::class, 'id_category_report');
+    }
 }

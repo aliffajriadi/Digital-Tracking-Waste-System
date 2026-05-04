@@ -25,6 +25,16 @@ class WasteSubCategory extends Model
         return $this->belongsTo(WasteCategory::class, 'id_waste_category');
     }
 
+    public function b3Detail()
+    {
+        return $this->belongsTo(WasteB3Detail::class, 'id_waste_b3_detail');
+    }
+
+    public function unitMeasured()
+    {
+        return $this->belongsTo(UnitMeasured::class, 'id_unit_measured');
+    }
+
     public function wasteEntries()
     {
         return $this->hasMany(WasteEntry::class, 'id_waste_sub_category');
