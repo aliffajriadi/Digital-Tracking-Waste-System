@@ -34,6 +34,7 @@
             <thead class="bg-gray-50/80">
                 <tr>
                     <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Foto</th>
                     <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nama Olahan</th>
                     <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Satuan</th>
                     <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Qty Default</th>
@@ -44,6 +45,17 @@
                 @forelse($processedWastes as $i => $item)
                 <tr class="hover:bg-gray-50/60 transition-colors">
                     <td class="px-6 py-4 text-xs text-gray-400">{{ $processedWastes->firstItem() + $i }}</td>
+                    <td class="px-6 py-4">
+                        @if($item->photo)
+                            <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
+                                <img src="{{ asset('storage/' . $item->photo) }}" class="w-full h-full object-cover" alt="{{ $item->name }}">
+                            </div>
+                        @else
+                            <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-gray-200">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                            </div>
+                        @endif
+                    </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
@@ -78,7 +90,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-6 py-14 text-center">
+                    <td colspan="6" class="px-6 py-14 text-center">
                         <i data-lucide="recycle" class="w-10 h-10 text-gray-200 mx-auto mb-3"></i>
                         <p class="text-sm text-gray-400">Belum ada jenis olahan</p>
                     </td>
@@ -99,7 +111,7 @@
                 <h2 class="text-sm font-extrabold text-gray-800">Tambah Jenis Olahan</h2>
                 <button @click="openAdd = false" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            <form method="POST" action="{{ route('admin.processed-waste.store') }}" class="p-6 space-y-4">
+            <form method="POST" action="{{ route('admin.processed-waste.store') }}" enctype="multipart/form-data" class="p-6 space-y-4">
                 @csrf
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nama Olahan</label>
@@ -124,6 +136,10 @@
                         <input type="number" name="default_measured_qty" step="0.01" min="0" required class="w-full h-10 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBFA6]/20 focus:border-[#3DBFA6]">
                     </div>
                 </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Foto Produk Olahan (Input Gambar)</label>
+                    <input type="file" name="photo" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-50 file:text-teal-600 hover:file:bg-teal-100 cursor-pointer">
+                </div>
                 <div class="flex justify-end gap-2.5 pt-1">
                     <button type="button" @click="openAdd = false" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm font-bold hover:bg-gray-50">Batal</button>
                     <button type="submit" class="px-4 py-2.5 rounded-xl bg-[#3DBFA6] text-white text-sm font-bold hover:bg-[#32aa94]">Simpan</button>
@@ -140,7 +156,7 @@
                 <button @click="openEdit = false" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <template x-if="editItem">
-                <form method="POST" :action="`/admin/processed-waste/${editItem.id}`" class="p-6 space-y-4">
+                <form method="POST" :action="`/admin/processed-waste/${editItem.id}`" enctype="multipart/form-data" class="p-6 space-y-4">
                     @csrf @method('PUT')
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nama Olahan</label>
@@ -163,6 +179,10 @@
                             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Qty Default</label>
                             <input type="number" name="default_measured_qty" :value="editItem.default_measured_qty" step="0.01" min="0" required class="w-full h-10 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBFA6]/20 focus:border-[#3DBFA6]">
                         </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Ganti Foto</label>
+                        <input type="file" name="photo" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer">
                     </div>
                     <div class="flex justify-end gap-2.5 pt-1">
                         <button type="button" @click="openEdit = false" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm font-bold hover:bg-gray-50">Batal</button>

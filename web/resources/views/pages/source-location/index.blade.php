@@ -34,6 +34,7 @@
             <thead class="bg-gray-50/80">
                 <tr>
                     <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Foto</th>
                     <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nama Lokasi</th>
                     <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Alamat</th>
                     <th class="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Entri</th>
@@ -45,12 +46,18 @@
                 <tr class="hover:bg-gray-50/60 transition-colors">
                     <td class="px-6 py-4 text-xs text-gray-400">{{ $locations->firstItem() + $i }}</td>
                     <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-teal-500"></i>
+                        @if($loc->photo)
+                            <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
+                                <img src="{{ asset('storage/' . $loc->photo) }}" class="w-full h-full object-cover" alt="{{ $loc->name }}">
                             </div>
-                            <span class="text-xs font-semibold text-gray-800">{{ $loc->name }}</span>
-                        </div>
+                        @else
+                            <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-gray-200">
+                                <i data-lucide="map-pin" class="w-4 h-4"></i>
+                            </div>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-semibold text-gray-800">{{ $loc->name }}</span>
                     </td>
                     <td class="px-6 py-4 text-xs text-gray-500">{{ $loc->address ?? '-' }}</td>
                     <td class="px-6 py-4">
@@ -77,7 +84,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-6 py-14 text-center">
+                    <td colspan="6" class="px-6 py-14 text-center">
                         <i data-lucide="map-pin" class="w-10 h-10 text-gray-200 mx-auto mb-3"></i>
                         <p class="text-sm text-gray-400">Belum ada sumber lokasi</p>
                     </td>
@@ -98,7 +105,7 @@
                 <h2 class="text-sm font-extrabold text-gray-800">Tambah Lokasi Sumber</h2>
                 <button @click="openAdd = false" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            <form method="POST" action="{{ route('admin.source-location.store') }}" class="p-6 space-y-4">
+            <form method="POST" action="{{ route('admin.source-location.store') }}" enctype="multipart/form-data" class="p-6 space-y-4">
                 @csrf
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nama Lokasi</label>
@@ -107,6 +114,10 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Alamat</label>
                     <textarea name="address" rows="2" placeholder="Alamat lengkap..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBFA6]/20 focus:border-[#3DBFA6] resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Foto Lokasi (Input Gambar)</label>
+                    <input type="file" name="photo" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-50 file:text-teal-600 hover:file:bg-teal-100 cursor-pointer">
                 </div>
                 <div class="flex justify-end gap-2.5 pt-1">
                     <button type="button" @click="openAdd = false" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm font-bold hover:bg-gray-50">Batal</button>
@@ -124,7 +135,7 @@
                 <button @click="openEdit = false" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <template x-if="editItem">
-                <form method="POST" :action="`/admin/source-location/${editItem.id}`" class="p-6 space-y-4">
+                <form method="POST" :action="`/admin/source-location/${editItem.id}`" enctype="multipart/form-data" class="p-6 space-y-4">
                     @csrf @method('PUT')
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nama Lokasi</label>
@@ -133,6 +144,10 @@
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Alamat</label>
                         <textarea name="address" rows="2" x-text="editItem.address" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBFA6]/20 focus:border-[#3DBFA6] resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Ganti Foto</label>
+                        <input type="file" name="photo" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer">
                     </div>
                     <div class="flex justify-end gap-2.5 pt-1">
                         <button type="button" @click="openEdit = false" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm font-bold hover:bg-gray-50">Batal</button>

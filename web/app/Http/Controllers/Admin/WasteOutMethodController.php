@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\WasteOutMethod;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class WasteOutMethodController extends Controller
 {
@@ -25,7 +26,12 @@ class WasteOutMethodController extends Controller
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:100', 'unique:waste_out_method,name'],
             'description' => ['nullable', 'string'],
+            'photo'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('methods', 'public');
+        }
 
         WasteOutMethod::create($validated);
         return back()->with('success', 'Metode keluar sampah berhasil ditambahkan.');
@@ -36,7 +42,16 @@ class WasteOutMethodController extends Controller
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:100', "unique:waste_out_method,name,{$wasteOutMethod->id}"],
             'description' => ['nullable', 'string'],
+            'photo'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($wasteOutMethod->photo) {
+                Storage::disk('public')->delete($wasteOutMethod->photo);
+            }
+            $validated['photo'] = $request->file('photo')->store('methods', 'public');
+        }
 
         $wasteOutMethod->update($validated);
         return back()->with('success', 'Metode keluar sampah berhasil diperbarui.');

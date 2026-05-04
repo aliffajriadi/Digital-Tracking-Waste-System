@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\WasteCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class WasteCategoryController extends Controller
 {
@@ -23,7 +24,13 @@ class WasteCategoryController extends Controller
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
+            'photo'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('categories', 'public');
+        }
+
         WasteCategory::create($validated);
         return back()->with('success', 'Kategori sampah berhasil ditambahkan.');
     }
@@ -33,7 +40,16 @@ class WasteCategoryController extends Controller
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
+            'photo'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            if ($wasteCategory->photo) {
+                Storage::disk('public')->delete($wasteCategory->photo);
+            }
+            $validated['photo'] = $request->file('photo')->store('categories', 'public');
+        }
+
         $wasteCategory->update($validated);
         return back()->with('success', 'Kategori sampah berhasil diperbarui.');
     }

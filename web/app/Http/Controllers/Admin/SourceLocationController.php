@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SourceLocationWaste;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SourceLocationController extends Controller
 {
@@ -23,7 +24,13 @@ class SourceLocationController extends Controller
         $validated = $request->validate([
             'name'    => ['required', 'string', 'max:100'],
             'address' => ['nullable', 'string'],
+            'photo'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('locations', 'public');
+        }
+
         SourceLocationWaste::create($validated);
         return back()->with('success', 'Sumber lokasi berhasil ditambahkan.');
     }
@@ -33,7 +40,16 @@ class SourceLocationController extends Controller
         $validated = $request->validate([
             'name'    => ['required', 'string', 'max:100'],
             'address' => ['nullable', 'string'],
+            'photo'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            if ($sourceLocation->photo) {
+                Storage::disk('public')->delete($sourceLocation->photo);
+            }
+            $validated['photo'] = $request->file('photo')->store('locations', 'public');
+        }
+
         $sourceLocation->update($validated);
         return back()->with('success', 'Sumber lokasi berhasil diperbarui.');
     }

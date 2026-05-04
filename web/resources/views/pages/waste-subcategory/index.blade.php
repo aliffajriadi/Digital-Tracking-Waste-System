@@ -45,6 +45,7 @@
                 <thead class="bg-gray-50/80">
                     <tr>
                         <th class="px-5 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">#</th>
+                        <th class="px-5 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Foto</th>
                         <th class="px-5 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nama</th>
                         <th class="px-5 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kategori</th>
                         <th class="px-5 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Satuan</th>
@@ -58,6 +59,17 @@
                     @forelse($subCategories as $i => $item)
                     <tr class="hover:bg-gray-50/60 transition-colors">
                         <td class="px-5 py-4 text-xs text-gray-400">{{ $subCategories->firstItem() + $i }}</td>
+                        <td class="px-5 py-4">
+                            @if($item->photo)
+                                <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
+                                    <img src="{{ asset('storage/' . $item->photo) }}" class="w-full h-full object-cover" alt="{{ $item->name }}">
+                                </div>
+                            @else
+                                <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-gray-200">
+                                    <i data-lucide="image" class="w-4 h-4"></i>
+                                </div>
+                            @endif
+                        </td>
                         <td class="px-5 py-4">
                             <p class="text-xs font-semibold text-gray-800">{{ $item->name }}</p>
                             @if($item->description)
@@ -110,7 +122,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-14 text-center">
+                        <td colspan="9" class="px-6 py-14 text-center">
                             <i data-lucide="tag" class="w-10 h-10 text-gray-200 mx-auto mb-3"></i>
                             <p class="text-sm text-gray-400">Belum ada sub-kategori</p>
                         </td>
@@ -134,7 +146,7 @@
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
-            <form method="POST" action="{{ route('admin.waste-subcategory.store') }}" class="p-6 grid grid-cols-2 gap-4">
+            <form method="POST" action="{{ route('admin.waste-subcategory.store') }}" enctype="multipart/form-data" class="p-6 grid grid-cols-2 gap-4">
                 @csrf
                 <div class="col-span-2 sm:col-span-1">
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nama</label>
@@ -183,6 +195,10 @@
                         <option value="0">Nonaktif</option>
                     </select>
                 </div>
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Foto Sub-Kategori (Input Gambar)</label>
+                    <input type="file" name="photo" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-50 file:text-teal-600 hover:file:bg-teal-100 cursor-pointer">
+                </div>
                 <div class="col-span-2 flex justify-end gap-2.5 pt-2">
                     <button type="button" @click="openAdd = false" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm font-bold hover:bg-gray-50">Batal</button>
                     <button type="submit" class="px-4 py-2.5 rounded-xl bg-[#3DBFA6] text-white text-sm font-bold hover:bg-[#32aa94]">Simpan</button>
@@ -201,7 +217,7 @@
                 </button>
             </div>
             <template x-if="editItem">
-                <form method="POST" :action="`/admin/waste-subcategory/${editItem.id}`" class="p-6 grid grid-cols-2 gap-4">
+                <form method="POST" :action="`/admin/waste-subcategory/${editItem.id}`" enctype="multipart/form-data" class="p-6 grid grid-cols-2 gap-4">
                     @csrf @method('PUT')
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Nama</label>
@@ -246,6 +262,10 @@
                             <option value="1" :selected="editItem.is_active == 1">Aktif</option>
                             <option value="0" :selected="editItem.is_active == 0">Nonaktif</option>
                         </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Ganti Foto</label>
+                        <input type="file" name="photo" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer">
                     </div>
                     <div class="col-span-2 flex justify-end gap-2.5 pt-2">
                         <button type="button" @click="openEdit = false" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm font-bold hover:bg-gray-50">Batal</button>

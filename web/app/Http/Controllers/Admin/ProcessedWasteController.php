@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ProcessedWaste;
 use App\Models\UnitMeasured;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProcessedWasteController extends Controller
 {
@@ -27,7 +28,13 @@ class ProcessedWasteController extends Controller
             'description'         => ['nullable', 'string'],
             'id_unit_measured'    => ['required', 'exists:unit_measured,id'],
             'default_measured_qty'=> ['required', 'numeric', 'min:0'],
+            'photo'               => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('processed', 'public');
+        }
+
         ProcessedWaste::create($validated);
         return back()->with('success', 'Jenis olahan berhasil ditambahkan.');
     }
@@ -39,7 +46,16 @@ class ProcessedWasteController extends Controller
             'description'         => ['nullable', 'string'],
             'id_unit_measured'    => ['required', 'exists:unit_measured,id'],
             'default_measured_qty'=> ['required', 'numeric', 'min:0'],
+            'photo'               => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            if ($processedWaste->photo) {
+                Storage::disk('public')->delete($processedWaste->photo);
+            }
+            $validated['photo'] = $request->file('photo')->store('processed', 'public');
+        }
+
         $processedWaste->update($validated);
         return back()->with('success', 'Jenis olahan berhasil diperbarui.');
     }

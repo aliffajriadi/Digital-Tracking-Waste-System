@@ -15,6 +15,21 @@ class WasteOutData extends Model
         'created_at',
     ];
 
+    public function attachment()
+    {
+        return $this->hasOne(AttachmentWasteOutData::class, 'id_waste_out_data');
+    }
+
+    public function dataWasteOut()
+    {
+        return $this->hasMany(DataWasteOut::class, 'id_waste_out_data');
+    }
+
+    public function sellingData()
+    {
+        return $this->hasOne(WasteSellingData::class, 'id_waste_out_data');
+    }
+
     public function method()
     {
         return $this->belongsTo(WasteOutMethod::class, 'id_waste_out_method');

@@ -8,6 +8,7 @@ use App\Models\WasteCategory;
 use App\Models\WasteB3Detail;
 use App\Models\UnitMeasured;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class WasteSubCategoryController extends Controller
 {
@@ -40,8 +41,15 @@ class WasteSubCategoryController extends Controller
             'id_unit_measured'    => ['required', 'exists:unit_measured,id'],
             'default_measured_qty'=> ['required', 'numeric', 'min:0'],
             'is_active'           => ['boolean'],
+            'photo'               => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
         $validated['is_active'] = $request->boolean('is_active', true);
+        
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('subcategories', 'public');
+        }
+
         WasteSubCategory::create($validated);
         return back()->with('success', 'Sub-kategori berhasil ditambahkan.');
     }
@@ -56,8 +64,18 @@ class WasteSubCategoryController extends Controller
             'id_unit_measured'    => ['required', 'exists:unit_measured,id'],
             'default_measured_qty'=> ['required', 'numeric', 'min:0'],
             'is_active'           => ['boolean'],
+            'photo'               => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
+
         $validated['is_active'] = $request->boolean('is_active', true);
+
+        if ($request->hasFile('photo')) {
+            if ($wasteSubcategory->photo) {
+                Storage::disk('public')->delete($wasteSubcategory->photo);
+            }
+            $validated['photo'] = $request->file('photo')->store('subcategories', 'public');
+        }
+
         $wasteSubcategory->update($validated);
         return back()->with('success', 'Sub-kategori berhasil diperbarui.');
     }
