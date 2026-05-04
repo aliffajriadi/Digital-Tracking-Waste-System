@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('id_waste_out_method')->constrained('waste_out_method');
             $table->foreignId('id_waste_destination')->nullable()->constrained('waste_destinations');
             $table->text('notes')->nullable();
-            $table->dateTime('created_at')->nullable();
+            $table->timestamps();
         });
     }
 

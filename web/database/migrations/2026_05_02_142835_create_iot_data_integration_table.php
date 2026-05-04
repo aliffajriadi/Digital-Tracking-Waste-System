@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->decimal('soil_data', 18, 4);
             $table->decimal('humidity', 18, 4);
-            $table->dateTime('created_at');
+            $table->timestamps();
         });
     }
 

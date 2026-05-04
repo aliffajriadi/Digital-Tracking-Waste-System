@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('website')->nullable();
             $table->text('notes')->nullable();
-            $table->dateTime('created_at');
+            $table->timestamps();
         });
     }
 

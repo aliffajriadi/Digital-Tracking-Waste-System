@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('password');
             $table->foreignId('role_id')->constrained('role');
             $table->boolean('is_active');
-            $table->dateTime('created_at');
             $table->string('photo')->nullable();
+            $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

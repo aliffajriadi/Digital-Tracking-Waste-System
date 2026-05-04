@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('id_waste_out_data')->constrained('waste_out_data');
             $table->decimal('total_revenue', 18, 2);
             $table->foreignId('id_buyer')->constrained('data_collector_buyer');
-            $table->dateTime('created_at');
+            $table->timestamps();
         });
     }
 

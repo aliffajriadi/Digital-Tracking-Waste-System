@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('id_waste_b3_detail')->nullable()->constrained('waste_b3_detail');
             $table->string('photo')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->dateTime('created_at');
+            $table->timestamps();
             $table->foreignId('id_unit_measured')->constrained('unit_measured');
             $table->decimal('default_measured_qty', 18, 4);
         });

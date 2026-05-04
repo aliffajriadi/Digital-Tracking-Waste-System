@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('id_user')->constrained('users');
             $table->decimal('measured_qty', 18, 4);
             $table->text('notes')->nullable();
-            $table->dateTime('created_at');
+            $table->timestamps();
         });
     }
 
