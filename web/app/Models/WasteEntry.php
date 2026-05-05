@@ -26,4 +26,14 @@ class WasteEntry extends Model
     {
         return $this->belongsTo(WasteSubCategory::class, 'id_waste_sub_category');
     }
+
+    public function sourceLocation()
+    {
+        return $this->belongsTo(SourceLocationWaste::class, 'id_source_location_waste');
+    }
+
+    public function attachment()
+    {
+        return $this->hasOne(AttachmentWasteEntry::class, 'id_waste_entry');
+    }
 }

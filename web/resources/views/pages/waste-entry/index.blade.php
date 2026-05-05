@@ -52,6 +52,7 @@
                         <th class="px-5 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sumber</th>
                         <th class="px-5 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Catatan</th>
                         <th class="px-5 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">Waktu</th>
+                        <th class="px-5 py-3.5 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -79,6 +80,12 @@
                         <td class="px-5 py-3.5 text-xs text-gray-500">{{ $entry->sourceLocation?->name ?? '-' }}</td>
                         <td class="px-5 py-3.5 text-xs text-gray-500 max-w-[150px] truncate">{{ $entry->notes ?? '-' }}</td>
                         <td class="px-5 py-3.5 text-[11px] text-gray-400">{{ $entry->created_at?->format('d/m/Y H:i') }}</td>
+                        <td class="px-5 py-3.5 text-center">
+                            <a href="{{ route('admin.waste-entry.show', $entry->id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-[10px] font-bold hover:bg-[#3DBFA6] hover:text-white transition-all">
+                                <i data-lucide="eye" class="w-3 h-3"></i>
+                                Cek Detail
+                            </a>
+                        </td>
                     </tr>
                     @empty
                     <tr>

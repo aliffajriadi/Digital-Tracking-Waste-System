@@ -27,25 +27,32 @@
                     <div>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Metode</p>
                         <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-50 text-orange-600">
-                            {{ $wasteOut->method?->name ?? '-' }}
+                            {{ $wasteOut->wasteOutMethod?->name ?? '-' }}
                         </span>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Tujuan</p>
-                        <p class="text-xs font-medium text-gray-800">{{ $wasteOut->destination?->name ?? '-' }}</p>
                     </div>
                     <div>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Waktu</p>
                         <p class="text-xs font-medium text-gray-800">{{ $wasteOut->created_at?->format('d F Y, H:i') }}</p>
                     </div>
+                    @if($wasteOut->wasteDestination)
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Tujuan</p>
+                        <p class="text-xs font-medium text-gray-800">{{ $wasteOut->wasteDestination->name }}</p>
+                        <p class="text-[9px] text-gray-400">{{ $wasteOut->wasteDestination->location }}</p>
+                    </div>
+                    @endif
+                    
                     @if($wasteOut->sellingData)
-                        <div>
-                            <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Pendapatan</p>
-                            <p class="text-xs font-bold text-orange-600">Rp {{ number_format($wasteOut->sellingData->total_revenue, 0, ',', '.') }}</p>
-                        </div>
-                        <div class="col-span-2">
-                            <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Pembeli / Pengepul</p>
-                            <p class="text-xs font-medium text-gray-800">{{ $wasteOut->sellingData->buyer?->name ?? '-' }}</p>
+                        <div class="col-span-2 grid grid-cols-2 gap-4 p-4 rounded-xl bg-orange-50/50 border border-orange-100">
+                            <div>
+                                <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Pendapatan</p>
+                                <p class="text-sm font-extrabold text-orange-600">Rp {{ number_format($wasteOut->sellingData->total_revenue, 0, ',', '.') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Pembeli / Pengepul</p>
+                                <p class="text-xs font-bold text-gray-800">{{ $wasteOut->sellingData->buyer?->name ?? '-' }}</p>
+                                <p class="text-[9px] text-gray-400">{{ $wasteOut->sellingData->buyer?->address ?? '' }}</p>
+                            </div>
                         </div>
                     @endif
                     <div class="col-span-2">

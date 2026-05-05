@@ -30,12 +30,12 @@ class WasteOutData extends Model
         return $this->hasOne(WasteSellingData::class, 'id_waste_out_data');
     }
 
-    public function method()
+    public function wasteOutMethod()
     {
         return $this->belongsTo(WasteOutMethod::class, 'id_waste_out_method');
     }
 
-    public function destination()
+    public function wasteDestination()
     {
         return $this->belongsTo(WasteDestinations::class, 'id_waste_destination');
     }

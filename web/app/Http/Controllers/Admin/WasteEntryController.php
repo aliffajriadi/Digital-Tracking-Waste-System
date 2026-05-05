@@ -32,7 +32,7 @@ class WasteEntryController extends Controller
 
     public function show(WasteEntry $wasteEntry)
     {
-        $wasteEntry->load(['user.picDetail', 'subCategory.category', 'sourceLocation']);
+        $wasteEntry->load(['user.picDetail', 'subCategory.category', 'sourceLocation', 'attachment']);
         return view('pages.waste-entry.show', compact('wasteEntry'));
     }
 }
