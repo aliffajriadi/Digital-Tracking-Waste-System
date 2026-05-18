@@ -49,6 +49,6 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
-        return view('pages.dashboard', compact('stats', 'monthlyEntry', 'topWaste', 'recentEntries'));
+        return view('pages.dashboard-admin.index', compact('stats', 'monthlyEntry', 'topWaste', 'recentEntries'));
     }
 }

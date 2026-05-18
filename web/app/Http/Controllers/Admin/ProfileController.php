@@ -14,7 +14,7 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user()->load('adminDetail');
-        return view('pages.profile', compact('user'));
+        return view('pages.setting-profile.index', compact('user'));
     }
 
     public function update(Request $request)

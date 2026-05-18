@@ -6,24 +6,34 @@
 @section('content')
 <div class="max-w-5xl mx-auto space-y-7">
 
-    <!-- Profile Header Banner -->
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="h-28 bg-gradient-to-r from-[#1aa88e] to-[#17b89c]"></div>
         <div class="px-7 pb-7">
-            <div class="flex flex-col md:flex-row md:items-end gap-5 -mt-10">
-                <!-- Avatar -->
-                <div class="w-20 h-20 rounded-2xl border-4 border-white bg-[#1aa88e] shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
-                    <span class="text-white text-2xl font-extrabold">
-                        {{ strtoupper(substr($user->adminDetail?->full_name ?? 'A', 0, 2)) }}
-                    </span>
+            <div class="flex flex-col md:flex-row md:items-end gap-5 -mt-10 md:-mt-18">
+                
+                <div class="relative group w-24 h-24 md:w-28 md:h-28 rounded-2xl border-4 border-white bg-gray-50 shadow-sm overflow-hidden flex-shrink-0">
+                    @if($user->adminDetail && $user->adminDetail->profile_image)
+                        <img src="{{ asset('storage/' . $user->adminDetail->profile_image) }}" class="w-full h-full object-cover" alt="Foto Profil">
+                    @else
+                        <img src="{{ asset('images/default-avatar.jpg') }}" class="w-full h-full object-cover" alt="Default Avatar">
+                    @endif
+
+                    <button type="button" onclick="document.getElementById('avatarInput').click()" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i data-lucide="camera" class="w-6 h-6 text-white"></i>
+                    </button>
+
+                    <div class="absolute bottom-1 right-1 w-6 h-6 bg-white border border-gray-200 shadow-sm rounded-lg flex items-center justify-center pointer-events-none">
+                        <i data-lucide="camera" class="w-3.5 h-3.5 text-gray-500"></i>
+                    </div>
+
+                    <input type="file" id="avatarInput" class="hidden" accept="image/*">
                 </div>
 
-                <!-- Info -->
-                <div class="pt-2">
-                    <h2 class="text-xl font-extrabold text-gray-800">
+                <div class="pt-2 md:pb-1.5">
+                    <h2 class="text-lg md:text-xl font-extrabold text-gray-800 tracking-wide">
                         {{ strtoupper($user->adminDetail?->full_name ?? 'Administrator') }}
                     </h2>
-                    <div class="flex flex-wrap items-center gap-3 mt-2">
+                    <div class="flex flex-wrap items-center gap-3 ">
                         <span class="bg-teal-50 text-teal-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                             Administrator
                         </span>
@@ -37,10 +47,8 @@
         </div>
     </div>
 
-    <!-- Forms Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-        <!-- Informasi Pribadi -->
         <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-7">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
@@ -81,7 +89,6 @@
             </form>
         </div>
 
-        <!-- Keamanan -->
         <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-7">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
@@ -149,5 +156,18 @@ function togglePass(id, button) {
     icon.setAttribute('data-lucide', input.type === 'password' ? 'eye' : 'eye-off');
     lucide.createIcons();
 }
+
+// Tambahan Script Frontend ringan untuk demo ganti foto (opsional biar pas diklik ganti gambarnya langsung berubah di layar)
+document.getElementById('avatarInput')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const imgElement = e.target.parentElement.querySelector('img');
+            if (imgElement) imgElement.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
 </script>
 @endpush
