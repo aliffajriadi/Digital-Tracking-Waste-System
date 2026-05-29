@@ -8,6 +8,8 @@ class Report extends Model
 {
     protected $table = 'report';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'id_user',
         'id_category_report',
