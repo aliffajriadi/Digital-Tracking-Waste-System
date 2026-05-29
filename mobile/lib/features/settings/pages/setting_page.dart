@@ -1,24 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mobile/features/auth/pages/login-page.dart'; 
+import 'change_password_page.dart';
+import 'change_profil_page.dart';
+import '../widgets/settings/menu_item_model.dart'; 
+import '../widgets/notification/notification_page.dart';
 
-class PengaturanPage extends StatelessWidget {
+class PengaturanPage extends StatefulWidget {
   const PengaturanPage({super.key});
 
   @override
+  State<PengaturanPage> createState() => _PengaturanPageState();
+}
+
+class _PengaturanPageState extends State<PengaturanPage> {
+  String _userName = 'Memuat...';
+  String _userNik = '...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Fungsi untuk mengambil data login user secara dinamis
+  void _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('user_name') ?? 'Nama Karyawan';
+      _userNik = prefs.getString('user_nik') ?? '-';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    const Color toscaWasteTrack = Color(0xFF16B3AC); 
+    const Color toscaWasteTrack = Color(0xFF14A38B); 
 
     return Stack(
       children: [
         // 1. BACKGROUND HEADER TOSCA
         Container(
           width: double.infinity,
-          height: 80,
+          height: 115,
           decoration: const BoxDecoration(
             color: toscaWasteTrack,
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(0),
-              bottomRight: Radius.circular(0), //sementara 
-            ),
           ),
         ),
 
@@ -55,7 +80,7 @@ class PengaturanPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     children: [
-                      // Profile Section (Foto, Nama, Email)
+                      // Profile Section (Foto, Nama, NIK dari database)
                       _buildProfileSection(toscaWasteTrack),
 
                       const SizedBox(height: 30),
@@ -64,23 +89,50 @@ class PengaturanPage extends StatelessWidget {
                       _buildMenuGroup(
                         toscaWasteTrack: toscaWasteTrack,
                         items: [
-                          _MenuItem(
+                          MenuItemModel(
                             icon: Icons.person_outline,
                             label: 'Pengaturan Profile',
-                            onTap: () {},
+                            onTap: () async {
+                              // Menunggu hasil (refresh data) ketika user kembali dari halaman UbahProfilPage
+                              final shouldRefresh = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const UbahProfilPage(),
+                                ),
+                              );
+
+                              // Jika bernilai true, panggil kembali data user yang baru dari SharedPreferences
+                              if (shouldRefresh == true) {
+                                _loadUserData(); 
+                              }
+                            },
                           ),
-                          _MenuItem(
+                          MenuItemModel(
                             icon: Icons.key_outlined,
                             label: 'Ganti Password',
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PengaturanPasswordPage(),
+                                ),
+                              );
+                            },
                           ),
-                          _MenuItem(
+                          MenuItemModel(
                             icon: Icons.notifications_none_outlined,
                             label: 'Notifikasi',
                             badge: true,
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const NotifikasiPage(),
+                                ),
+                              );
+                            },
                           ),
-                          _MenuItem(
+                          MenuItemModel(
                             icon: Icons.router_outlined,
                             label: 'Integrasi IoT',
                             onTap: () {},
@@ -94,7 +146,7 @@ class PengaturanPage extends StatelessWidget {
                       _buildMenuGroup(
                         toscaWasteTrack: toscaWasteTrack,
                         items: [
-                          _MenuItem(
+                          MenuItemModel(
                             icon: Icons.help_outline,
                             label: 'Bantuan',
                             onTap: () {},
@@ -104,8 +156,8 @@ class PengaturanPage extends StatelessWidget {
 
                       const SizedBox(height: 25),
 
-                      // Tombol Keluar Akun 
-                      _buildKeluarButton(),
+                      // Tombol Keluar Akun
+                      _buildKeluarButton(context),
 
                       const SizedBox(height: 40),
                     ],
@@ -122,7 +174,6 @@ class PengaturanPage extends StatelessWidget {
   Widget _buildProfileSection(Color toscaWasteTrack) {
     return Column(
       children: [
-        // Avatar dengan garis tepi lingkaran tipis Tosca
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
@@ -135,24 +186,22 @@ class PengaturanPage extends StatelessWidget {
           child: const CircleAvatar(
             radius: 50,
             backgroundColor: Color(0xFFE2E8F0),
-            // Catatan: Jika mau pakai foto, buka komentar baris di bawah ini:
-            // backgroundImage: AssetImage('assets/avatar.png'),
             child: Icon(Icons.person, size: 55, color: Colors.grey),
           ),
         ),
         const SizedBox(height: 14),
-        const Text(
-          'Naylah Amirah',
-          style: TextStyle(
+        Text(
+          _userName, // ◄── SEKARANG OTOMATIS AMBIL NAMA USER YANG LOGIN
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1E293B),
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'naylaamirah@pbl.com',
-          style: TextStyle(
+        Text(
+          'NIK: $_userNik', // ◄── SEKARANG OTOMATIS AMBIL NIK USER YANG LOGIN
+          style: const TextStyle(
             fontSize: 13,
             color: Color(0xFF64748B),
           ),
@@ -161,7 +210,7 @@ class PengaturanPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuGroup({required Color toscaWasteTrack, required List<_MenuItem> items}) {
+  Widget _buildMenuGroup({required Color toscaWasteTrack, required List<MenuItemModel> items}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -198,7 +247,7 @@ class PengaturanPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(_MenuItem item, Color toscaWasteTrack) {
+  Widget _buildMenuItem(MenuItemModel item, Color toscaWasteTrack) {
     return InkWell(
       onTap: item.onTap,
       borderRadius: BorderRadius.circular(16),
@@ -206,7 +255,6 @@ class PengaturanPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            // Kotak Icon Rounded Tosca
             Container(
               width: 40,
               height: 40,
@@ -235,7 +283,6 @@ class PengaturanPage extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            // Teks Label Menu
             Expanded(
               child: Text(
                 item.label,
@@ -246,7 +293,6 @@ class PengaturanPage extends StatelessWidget {
                 ),
               ),
             ),
-            // Arrow Chevron Kanan Tosca
             Icon(
               Icons.chevron_right,
               color: toscaWasteTrack,
@@ -258,11 +304,46 @@ class PengaturanPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKeluarButton() {
+  Widget _buildKeluarButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () async {
+          showDialog(
+            context: context,
+            builder: (BuildContext dialogContext) {
+              return AlertDialog(
+                title: const Text('Keluar Akun'),
+                content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
+
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                      }
+
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
+                          (route) => false,
+                        );
+                      }
+                    },
+                    child: const Text('Keluar', style: TextStyle(color: Color(0xFFE26B50))),
+                  ),
+                ],
+              );
+            },
+          );
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFE26B50), 
           foregroundColor: Colors.white,
@@ -274,9 +355,9 @@ class PengaturanPage extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
+          children: [
             Row(
-              children: [
+              children: const [
                 Icon(Icons.logout, color: Colors.white, size: 22),
                 SizedBox(width: 12),
                 Text(
@@ -288,25 +369,10 @@ class PengaturanPage extends StatelessWidget {
                 ),
               ],
             ),
-            Icon(Icons.chevron_right, color: Colors.white, size: 22),
+            const Icon(Icons.chevron_right, color: Colors.white, size: 22),
           ],
         ),
       ),
     );
   }
-}
-
-// Data Model Menu Item
-class _MenuItem {
-  final IconData icon;
-  final String label;
-  final bool badge;
-  final VoidCallback onTap;
-
-  _MenuItem({
-    required this.icon,
-    required this.label,
-    this.badge = false,
-    required this.onTap,
-  });
 }

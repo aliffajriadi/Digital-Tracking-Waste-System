@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../pages/dashboard.dart';
-import '../pages/setting.dart';
-//import '../pages/data_sampah_page.dart';
+import '../../dashboard/pages/dashboard_page.dart';
+import '../../settings/pages/setting_page.dart';
+import '../../input/pages/waste_data.dart';
+import '../../input/pages/history_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -17,8 +18,8 @@ class _MainNavigationState extends State<MainNavigation> {
   // Daftar halaman yang akan ditampilkan sesuai menu yang diklik
   final List<Widget> _pages = [
     const DashboardPage(),
-    const Scaffold(body: Center(child: Text('Halaman data sampah'))),
-    const Scaffold(body: Center(child: Text('Halaman Riwayat'))),
+    const LaporanDataHarianPage(),
+    const RiwayatPage(),
     const PengaturanPage(),
   ];
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/pages/login.dart'; 
+import 'package:mobile/features/auth/pages/login-page.dart'; 
 
 void main() {
   runApp(const WasteTrackApp());
