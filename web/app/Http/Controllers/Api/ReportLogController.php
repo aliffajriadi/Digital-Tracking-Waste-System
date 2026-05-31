@@ -56,7 +56,7 @@ class ReportLogController extends Controller
                 }
 
                 $keluar = $queryKeluar->orderBy('id', 'desc')->get()->flatMap(function ($item) {
-                    // Karena satu transaksi keluar bisa berisi banyak item sampah, kita pecah per detail item sampah
+                    // Karena satu transaksi keluar bisa berisi banyak item sampah, pecah per detail item sampah
                     return $item->dataWasteOut->map(function ($detail) use ($item) {
                         $namaSampah = $detail->is_processed_waste == 1 
                             ? ($detail->processedWaste->name ?? 'Produk Olahan')
@@ -114,10 +114,10 @@ class ReportLogController extends Controller
                         'id' => $item->id,
                         'type_log' => 'kendala',
                         'title' => 'Kendala: ' . ($item->title ?? 'Tidak Ada Judul'),
-                        'time_display' => 'Catatan', // Sesuai kesepakatan, karena tidak ada created_at
+                        'time_display' => 'Catatan', 
                         'amount' => '1 Berkas',
-                        'timestamp' => $item->id, // Akali urutan berdasarkan besaran ID karena tidak ada waktu
-                        'date_group' => 'Laporan Kendala Lapangan' // Kita kelompokkan ke section tersendiri
+                        'timestamp' => $item->id, 
+                        'date_group' => 'Laporan Kendala Lapangan' 
                     ];
                 });
                 $allLogs = $allLogs->merge($kendala);

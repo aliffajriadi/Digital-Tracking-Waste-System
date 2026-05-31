@@ -16,7 +16,7 @@ class LaporanController extends Controller
             ->leftJoin('waste_category', 'waste_sub_category.id_waste_category', '=', 'waste_category.id')
             ->leftJoin('unit_measured', 'waste_sub_category.id_unit_measured', '=', 'unit_measured.id')
             ->select(
-                'waste_entry.id', // <--- WAJIB ADA: Ambil ID asli dari tabel waste_entry
+                'waste_entry.id', 
                 'waste_entry.measured_qty',
                 'waste_entry.created_at',
                 'waste_sub_category.name as sub_name',
@@ -34,7 +34,7 @@ class LaporanController extends Controller
             $unit = $item->unit_symbol ?? 'Kg';
 
             return [
-                "id" => $item->id, // <--- WAJIB ADA: Kirim ID ini ke Flutter agar tidak bernilai Null!
+                "id" => $item->id, 
                 "kategori" => $catName . ", " . $subName,
                 "waktu" => $waktu,
                 "jumlah" => $item->measured_qty . " " . $unit,
@@ -94,7 +94,7 @@ class LaporanController extends Controller
                 "satuan" => $laporan->unit_symbol ?? 'Kg',
                 "sumber" => $laporan->location_name ?? 'TIDAK DIKETAHUI',
                 "catatan" => $laporan->notes ?? 'Tidak ada catatan dari PIC.',
-                "foto" => $laporan->photo_path ? "http://192.168.1.9:8000/storage/" . $laporan->photo_path : null
+                "foto" => $laporan->photo_path ? asset('storage/' . $laporan->photo_path) : null
             ];
 
             return response()->json(['success' => true, 'data' => $data]);

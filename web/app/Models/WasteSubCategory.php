@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class WasteSubCategory extends Model
 {
     protected $table = 'waste_sub_category';
+    public $timestamps = false;
 
     protected $fillable = [
         'id_waste_category',
@@ -19,6 +20,16 @@ class WasteSubCategory extends Model
         'id_unit_measured',
         'default_measured_qty',
     ];
+
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo) {
+            return asset('storage/' . $this->photo);
+        }
+        return null;
+    }
 
     public function category()
     {
