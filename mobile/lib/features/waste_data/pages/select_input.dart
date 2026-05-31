@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-// Sesuaikan nama file import di bawah ini dengan nama file aslimu di project
-import 'waste-in-input.dart';       
-import 'processed-type.dart';  
-import '../../kendala/pages/report_submiss.dart';     
+import '../../waste_entry/pages/form_waste_entry.dart';       
+import '../../waste_processed/pages/processed_method.dart';  
+import '../../report/pages/report_submiss.dart'; 
+import '../../waste_entry/pages/category_waste.dart';    
+import '../../waste_out/pages/method_out.dart';
 
 class PilihJenisLaporanPage extends StatelessWidget {
-  // 1. Ubah String menjadi String? (artinya boleh bernilai null)
   final String? jenisSampah;
 
-  // 2. Hapus kata 'required' di dalam constructor ini
   const PilihJenisLaporanPage({super.key, this.jenisSampah});
 
   @override
@@ -66,18 +65,7 @@ class PilihJenisLaporanPage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    // 3. Karena jenisSampah sekarang bisa null, kita beri nilai bawaan jika kosong (misal: 'Umum')
-                    builder: (context) => InputSampahPage(
-                      selectedSubCategory: WasteSubCategory(
-                        id: 1,
-                        name: "Daun Kering",
-                        categoryName: "Organik",
-                        photo: "https://via.placeholder.com/150",
-                        unitMeasured: UnitMeasured(id: 1, name: "Kilogram", symbol: "Kg"),
-                      ),
-                    ),
-                  ),
+                  MaterialPageRoute(builder: (context) => const PilihKategoriPage()),
                 );
               },
             ),
@@ -105,7 +93,10 @@ class PilihJenisLaporanPage extends StatelessWidget {
               endColor: const Color(0xFF70450D),
               iconAssetOrPlaceholder: Icons.logout_rounded,
               onTap: () {
-                _jalankanNavigasi(context, 'Sampah Keluar');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PilihMetodeKeluarPage()),
+                );
               },
             ),
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../dashboard/pages/dashboard_page.dart';
 import '../../settings/pages/setting_page.dart';
-import '../../input/pages/waste_data.dart';
-import '../../input/pages/history_page.dart';
+import '../../waste_data/pages/waste_data.dart';
+import '../../history/pages/history_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});

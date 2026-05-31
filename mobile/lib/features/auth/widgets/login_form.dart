@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile/features/navigation/pages/main_navigation.dart';
+import 'package:mobile/core/constants/api_constants.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -32,8 +33,7 @@ class _LoginFormState extends State<LoginForm> {
     });
 
     try {
-      // Menggunakan IP Wifi Laptop kamu yang aktif saat ini
-      String url = 'http://192.168.1.9:8000/api/login'; 
+      String url = ApiConstants.login;
 
       final response = await http.post(
         Uri.parse(url),
@@ -93,7 +93,6 @@ class _LoginFormState extends State<LoginForm> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 1. LOGO BULAT HIJAU
         Container(
           padding: const EdgeInsets.all(15),
           decoration: const BoxDecoration(
@@ -108,7 +107,6 @@ class _LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 12),
         
-        // 2. TEKS WASTETRACK
         const Text(
           'WasteTrack',
           style: TextStyle(
@@ -120,7 +118,6 @@ class _LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 35),
 
-        // 3. INPUT NOMOR INDUK KARYAWAN
         const Align(
           alignment: Alignment.centerLeft,
           child: Text(
@@ -151,7 +148,6 @@ class _LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 20),
 
-        // 4. INPUT KATA SANDI
         const Align(
           alignment: Alignment.centerLeft,
           child: Text(
@@ -196,7 +192,6 @@ class _LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 35),
 
-        // 5. TOMBOL LOGIN DENGAN GRADASI WARNA
         Container(
           width: double.infinity,
           height: 52,

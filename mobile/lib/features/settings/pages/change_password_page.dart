@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile/core/constants/api_constants.dart';
 
 class PengaturanPasswordPage extends StatefulWidget {
   const PengaturanPasswordPage({super.key});
@@ -58,8 +59,7 @@ class _PengaturanPasswordPageState extends State<PengaturanPasswordPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String nik = prefs.getString('user_nik') ?? '';
 
-      // 2. Sesuaikan URL API Laravel kamu (samakan dengan login/ubah profil)
-      String url = "http://192.168.1.9:8000/api/change-password";
+      String url = ApiConstants.changePassword;
 
       final response = await http.post(
         Uri.parse(url),

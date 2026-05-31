@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:mobile/core/constants/api_constants.dart';
 
 class LaporanKendalaPage extends StatefulWidget {
   const LaporanKendalaPage({super.key});
@@ -20,7 +21,7 @@ class _LaporanKendalaPageState extends State<LaporanKendalaPage> {
   File? _selectedFile; // Menyimpan file gambar yang dipilih
   bool _isLoading = false;
 
-  // Anggap saja ID User yang login adalah 1 (Sesuaikan dengan session login aplikasimu nanti)
+  // Anggap saja ID User yang login adalah 1 (Sesuaikan dengan session login aplikasi nanti)
   final String _currentUserId = "1"; 
 
   @override
@@ -32,7 +33,7 @@ class _LaporanKendalaPageState extends State<LaporanKendalaPage> {
   // Ambil daftar kategori kendala dari database
   Future<void> _fetchCategories() async {
     try {
-      final response = await http.get(Uri.parse("http://192.168.1.9:8000/api/kategori-kendala"));
+      final response = await http.get(Uri.parse(ApiConstants.kategoriKendala));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -71,7 +72,7 @@ class _LaporanKendalaPageState extends State<LaporanKendalaPage> {
     setState(() => _isLoading = true);
 
     try {
-      var uri = Uri.parse("http://192.168.1.9:8000/api/laporan-kendala");
+      var uri = Uri.parse(ApiConstants.laporanKendala);
       // Gunakan MultipartRequest karena kita akan mengunggah file gambar
       var request = http.MultipartRequest('POST', uri);
 

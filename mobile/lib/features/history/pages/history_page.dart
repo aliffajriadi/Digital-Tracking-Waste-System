@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'report_detail.dart';
-import '../../kendala/pages/detail_submiss.dart';
+import 'detail_waste_page.dart';
+import '../../report/pages/report_detail.dart';
+import 'package:mobile/core/constants/api_constants.dart';
 
 class RiwayatPage extends StatefulWidget {
   const RiwayatPage({super.key});
@@ -27,12 +28,10 @@ class _RiwayatPageState extends State<RiwayatPage> {
     _fetchRiwayat();
   }
 
-  // Fungsi Fetch Data dari Laravel (Mendukung query parameter live search & filter)
   Future<void> _fetchRiwayat() async {
     setState(() => _isLoading = true);
     try {
-      // Ubah parameter pemanggilan API agar sinkron dengan Controller
-      String url = "http://192.168.1.9:8000/api/riwayat-laporan?search=$_searchQuery";
+      String url = "${ApiConstants.riwayatLaporan}?search=$_searchQuery";
       
       if (_selectedCategoryId != null) {
         url += "&type=$_selectedCategoryId"; 

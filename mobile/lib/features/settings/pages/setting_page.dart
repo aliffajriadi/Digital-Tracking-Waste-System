@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mobile/features/auth/pages/login-page.dart'; 
+import 'package:mobile/features/auth/pages/login_page.dart'; 
 import 'change_password_page.dart';
 import 'change_profil_page.dart';
 import '../widgets/settings/menu_item_model.dart'; 
 import '../widgets/notification/notification_page.dart';
+import 'help_center_page.dart';
 
 class PengaturanPage extends StatefulWidget {
   const PengaturanPage({super.key});
@@ -149,7 +150,14 @@ class _PengaturanPageState extends State<PengaturanPage> {
                           MenuItemModel(
                             icon: Icons.help_outline,
                             label: 'Bantuan',
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const HelpCenterPage(),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -191,7 +199,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
         ),
         const SizedBox(height: 14),
         Text(
-          _userName, // ◄── SEKARANG OTOMATIS AMBIL NAMA USER YANG LOGIN
+          _userName, // OTOMATIS AMBIL NAMA USER YANG LOGIN
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -200,7 +208,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
         ),
         const SizedBox(height: 4),
         Text(
-          'NIK: $_userNik', // ◄── SEKARANG OTOMATIS AMBIL NIK USER YANG LOGIN
+          'NIK: $_userNik', // OTOMATIS AMBIL NIK USER YANG LOGIN
           style: const TextStyle(
             fontSize: 13,
             color: Color(0xFF64748B),

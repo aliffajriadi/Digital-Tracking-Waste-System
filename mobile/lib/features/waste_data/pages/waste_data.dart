@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'select_input.dart'; // Pastikan file ini ada
-import 'report_detail.dart'; // Pastikan file ini ada
+import 'select_input.dart';
+import '../../history/pages/detail_waste_page.dart';
+import 'package:mobile/core/constants/api_constants.dart'; 
 
 class LaporanDataHarianPage extends StatefulWidget {
   const LaporanDataHarianPage({super.key});
@@ -24,13 +25,13 @@ class _LaporanDataHarianPageState extends State<LaporanDataHarianPage> {
 
   Future<void> _fetchLaporan() async {
   try {
-    final response = await http.get(Uri.parse("http://192.168.1.9:8000/api/laporan-harian"))
+    final response = await http.get(Uri.parse(ApiConstants.laporanHarian))
         .timeout(const Duration(seconds: 5));
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       
-      // KUNCINYA DI SINI: Cek apakah widget masih terpasang di layar
+      // Cek apakah widget masih terpasang di layar
       if (mounted) {
         setState(() {
           _laporanList = data['data'] ?? [];
@@ -73,7 +74,7 @@ class _LaporanDataHarianPageState extends State<LaporanDataHarianPage> {
                     const Text('Laporan Data Harian', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 15),
                 Row(
                   children: [
                     Expanded(

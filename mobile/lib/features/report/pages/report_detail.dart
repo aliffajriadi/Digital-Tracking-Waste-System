@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:mobile/core/constants/api_constants.dart';
 
 class DetailKendalaPage extends StatefulWidget {
   final String reportId;
@@ -25,7 +26,7 @@ class _DetailKendalaPageState extends State<DetailKendalaPage> {
   Future<void> _fetchDetailKendala() async {
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.1.9:8000/api/laporan-kendala/${widget.reportId}"),
+        Uri.parse("${ApiConstants.laporanKendala}/${widget.reportId}"),
       );
 
       if (response.statusCode == 200) {
@@ -109,7 +110,6 @@ class _DetailKendalaPageState extends State<DetailKendalaPage> {
                       ),
                       const Divider(height: 30, thickness: 1),
 
-                      // Isi / Deskripsi Kendala
                       const Text(
                         "Keterangan / Laporan Lapangan:",
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black54),

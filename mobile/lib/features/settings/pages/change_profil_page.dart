@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mobile/core/constants/api_constants.dart';
 
 class UbahProfilPage extends StatefulWidget {
   const UbahProfilPage({super.key});
@@ -70,8 +71,7 @@ class _UbahProfilPageState extends State<UbahProfilPage> {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // 1. Alamat API Laravel kamu (Sesuaikan IP/Domain & Port-nya seperti pas login)
-      // Jika pakai emulator Android, ganti localhost jadi 10.0.2.2
-      String url = "http://192.168.1.9:8000/api/update-profile";
+      String url = ApiConstants.updateProfile;
 
       // 2. Kirim data via HTTP POST
       final response = await http.post(
@@ -81,7 +81,7 @@ class _UbahProfilPageState extends State<UbahProfilPage> {
           'name': _nameController.text,
           'email': _emailController.text,
           'phone': _phoneController.text,
-          // Jika API kamu mendukung upload foto, kamu bisa tambahkan field untuk itu di sini
+          // Jika API mendukung upload foto, bisa tambahkan field untuk itu di sini
         },
       ).timeout(const Duration(seconds: 10));
 
@@ -96,7 +96,7 @@ class _UbahProfilPageState extends State<UbahProfilPage> {
         // Jika update berhasil di backend, simpan juga di SharedPreferences hp
         await prefs.setString('user_name', _nameController.text);
     
-      // Simpan email sesuai key yang aktif di aplikasi kamu
+      // Simpan email sesuai key yang aktif di aplikasi 
       if (prefs.containsKey('user_email')) {
         await prefs.setString('user_email', _emailController.text);
       } else {

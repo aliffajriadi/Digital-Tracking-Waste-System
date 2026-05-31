@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:mobile/features/input/pages/select_input.dart';
+import 'package:mobile/features/waste_data/pages/select_input.dart';
 import 'package:mobile/features/settings/widgets/notification/notification_page.dart';
+import 'package:mobile/core/constants/api_constants.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -35,7 +36,7 @@ class _DashboardPageState extends State<DashboardPage> {
       String nik = userNikRaw.toString();
 
       // Pastikan backend mengembalikan data 'user_photo' dan 'recent_entries' hari ini
-      String url = "http://192.168.1.9:8000/api/dashboard-data?nik=$nik"; 
+      String url = "${ApiConstants.dashboardData}?nik=$nik";
 
       final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4)); 
       
@@ -126,7 +127,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               borderRadius: BorderRadius.circular(26),
                               child: _fotoProfil != null && _fotoProfil!.isNotEmpty
                                   ? Image.network(
-                                      "http://192.168.1.9:8000/storage/$_fotoProfil",
+                                      "${ApiConstants.baseUrl}/storage/$_fotoProfil",
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => 
                                           const Icon(Icons.person_rounded, color: Colors.white, size: 32),
@@ -164,7 +165,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
 
-                    // KARTU RINGKASAN (Statis - Sesuai Request Dibiarkan Dulu)
+                    // KARTU RINGKASAN (Statis - Belum bisa dinamis)
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 20),
                       padding: const EdgeInsets.all(20),
@@ -225,7 +226,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         children: [
                           const Text('Lapor Sampah Harian Sekarang', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
                           const SizedBox(height: 16),
-                          
                           _isLoading
                               ? const Center(child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator(color: primaryColor)))
                               : _kategoriSampah.isEmpty
@@ -235,7 +235,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                         String name = item['name'] ?? 'Kategori';
                                         String desc = item['description'] ?? '';
                                         var style = _getStyleKategori(name);
-
                                         return _buildMenuSampah(
                                           title: name,
                                           desc: desc,
@@ -248,7 +247,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           
                           const SizedBox(height: 24),
 
-                          // === 📜 SEKSI RIWAYAT BARU SAJA (DINAMIS DARI DATABASE) ===
+                          // SEKSI RIWAYAT BARU SAJA (DINAMIS DARI DATABASE) 
                           const Text('Riwayat Baru Saja', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
                           const SizedBox(height: 12),
 
@@ -365,14 +364,3 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-// Halaman Notifikasi sederhana
-class NotifikasiPage extends StatelessWidget {
-  const NotifikasiPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Notifikasi")),
-      body: const Center(child: Text("Belum ada notifikasi baru")),
-    );
-  }
-}
