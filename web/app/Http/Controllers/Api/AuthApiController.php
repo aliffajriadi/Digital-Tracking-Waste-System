@@ -113,8 +113,7 @@ class AuthApiController extends Controller
             ], 422);
         }
 
-        // 5. UPDATE DATABASE NYA DI SINI 
-        
+        // 5. UPDATE DATABASE NYA 
         // A. Update nama lengkap di tabel pic_details
         $picDetail->full_name = $request->name;
         $picDetail->save();
