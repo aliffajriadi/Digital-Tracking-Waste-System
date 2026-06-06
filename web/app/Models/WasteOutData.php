@@ -9,6 +9,7 @@ class WasteOutData extends Model
     protected $table = 'waste_out_data';
 
     protected $fillable = [
+        'id_user',
         'id_waste_out_method',
         'id_waste_destination',
         'notes',
@@ -38,5 +39,10 @@ class WasteOutData extends Model
     public function wasteDestination()
     {
         return $this->belongsTo(WasteDestinations::class, 'id_waste_destination');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
     }
 }

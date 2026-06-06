@@ -53,23 +53,25 @@ class WasteOutController extends Controller
         // Validasi input kiriman dari Flutter sesuai skema database asli kamu
         $request->validate([
             'id_waste_out_method'  => 'required|exists:waste_out_method,id',
-            'id_waste_destination' => 'nullable', // Boleh null sesuai blueprint migration kamu
+            'id_waste_destination' => 'nullable', 
             'notes'                => 'nullable|string',
             'created_at'           => 'required|date_format:Y-m-d H:i:s',
-            'items'                => 'required|json', // List item sampah dari Flutter (JSON text)
-            'photo'                => 'nullable|image|max:2048' // File bukti foto opsional
+            'items'                => 'required|json', 
+            'photo'                => 'nullable|image|max:2048' 
         ]);
 
         // Mulai database transaction demi keamanan data
         DB::beginTransaction();
 
         try {
+            // DI SINI PERUBAHANNYA: Tambahkan id_user ke dalam query insert
             $wasteOutDataId = DB::table('waste_out_data')->insertGetId([
+                'id_user'              => $request->user()->id, // <== TAMBAHKAN BARIS INI ==
                 'id_waste_out_method'  => $request->id_waste_out_method,
                 'id_waste_destination' => $request->id_waste_destination,
                 'notes'                => $request->notes,
                 'created_at'           => $request->created_at,
-                'updated_at'           => now(), // Mengisi kolom timestamps bawaan laravel
+                'updated_at'           => now(), 
             ]);
 
             if ($request->hasFile('photo')) {
@@ -77,7 +79,7 @@ class WasteOutController extends Controller
                 $photoPath = $request->file('photo')->store('waste_out_photos', 'public');
 
                 DB::table('attachment_waste_out_data')->insert([
-                    'id_waste_out_data' => $wasteOutDataId, // Menjadi Primary Key sekaligus Foreign Key
+                    'id_waste_out_data' => $wasteOutDataId, 
                     'path'              => $photoPath
                 ]);
             }
@@ -87,10 +89,10 @@ class WasteOutController extends Controller
             foreach ($items as $item) {
                 DB::table('data_waste_out')->insert([
                     'id_waste_out_data'     => $wasteOutDataId,
-                    'is_processed_waste'    => false, // Set false karena inputan ini adalah sampah subkategori biasa
-                    'id_waste_sub_category' => $item['id_sub_category'], // ID Subkategori dari dropdown Flutter
-                    'id_processed_waste'    => null,  // Set null karena bukan sampah olahan
-                    'measured_qty'          => $item['quantity'], // Angka jumlah kg masuk ke field 'measured_qty'
+                    'is_processed_waste'    => false, 
+                    'id_waste_sub_category' => $item['id_sub_category'], 
+                    'id_processed_waste'    => null,  
+                    'measured_qty'          => $item['quantity'], 
                 ]);
             }
 

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\CategoryReport;
 use App\Models\Report;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ReportSubmissionController extends Controller
 {
@@ -14,7 +15,8 @@ class ReportSubmissionController extends Controller
     public function getCategories()
     {
         try {
-            $categories = CategoryReport::all();
+            // Ambil data kategori, pastikan Model CategoryReport sudah dibuat
+            $categories = CategoryReport::select('id', 'name')->get();
             
             return response()->json([
                 'success' => true,
@@ -28,36 +30,40 @@ class ReportSubmissionController extends Controller
         }
     }
 
-    // Fungsi untuk menyimpan input data kendala dari Flutter
     public function storeKendala(Request $request)
     {
+        // 1. Validasi (Attachment dibuat nullable agar tidak wajib upload foto)
         $request->validate([
-            'id_user' => 'required',
-            'id_category_report' => 'required',
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'attachment' => 'nullable|file|mimes:png,jpg,jpeg,pdf,doc,docx|max:5120',
+            'id_category_report' => 'required|exists:category_report,id',
+            'title'              => 'required|string|max:255',
+            'content'            => 'required|string',
+            'attachment'         => 'nullable|image|mimes:png,jpg,jpeg|max:5120',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // 1. Simpan ke tabel report
+            // 2. Simpan ke tabel reports
+            // Menggunakan $request->user()->id jauh lebih aman daripada mengambil ID dari Flutter
             $report = Report::create([
-                'id_user' => $request->id_user,
+                'id_user'            => $request->user()->id, 
                 'id_category_report' => $request->id_category_report,
-                'title' => $request->title,
-                'content' => $request->content,
+                'title'              => $request->title,
+                'content'            => $request->content,
             ]);
 
-            // 2. Simpan file lampiran jika ada
+            // 3. Simpan lampiran jika ada
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
-                $path = $file->store('attachments/reports', 'public');
+                
+                // Beri nama unik agar tidak tertimpa
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('attachments/reports', $filename, 'public');
 
+                // Gunakan Query Builder atau Model Attachment jika ada
                 DB::table('attachment_report')->insert([
-                    'id_report' => $report->id,
-                    'path' => $path,
+                    'id_report'  => $report->id,
+                    'path'       => $path,
                 ]);
             }
 
@@ -66,7 +72,7 @@ class ReportSubmissionController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Laporan kendala berhasil disimpan!',
-                'data' => $report
+                'data'    => $report
             ], 201);
 
         } catch (\Exception $e) {

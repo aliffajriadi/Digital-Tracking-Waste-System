@@ -70,9 +70,7 @@ class AuthApiController extends Controller
     public function updateProfile(Request $request)
     {
         // 1. Validasi input dari Flutter
-        // Validasi unique email diganti agar mengecek tabel users berdasarkan ID user yang sedang di-update
         $validator = Validator::make($request->all(), [
-            'nik'   => 'required',
             'name'  => 'required|string|max:255',
             'email' => 'required|email',
         ]);
@@ -84,23 +82,16 @@ class AuthApiController extends Controller
             ], 422);
         }
 
-        // 2. Cari NIK terlebih dahulu di tabel pic_details
-        $picDetail = PicDetail::where('nik', $request->nik)->first();
+        // 2. AMBIL USER LANGSUNG DARI SANCTUM 
+        $user = $request->user();
+
+        // 3. Ambil data PicDetail yang nempel dengan user ini
+        $picDetail = PicDetail::where('id_user', $user->id)->first();
 
         if (!$picDetail) {
             return response()->json([
                 'success' => false,
-                'message' => 'Nomor Induk Karyawan (NIK) tidak ditemukan.'
-            ], 404);
-        }
-
-        // 3. Ambil data User dari relasi id_user yang ada di pic_details
-        $user = User::where('id', $picDetail->id_user)->first();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akun pengguna tidak ditemukan.'
+                'message' => 'Detail profil karyawan tidak ditemukan.'
             ], 404);
         }
 
@@ -122,7 +113,6 @@ class AuthApiController extends Controller
         $user->email = $request->email;
         $user->save();
 
-        // 6. Kembalikan respon sukses dalam format JSON ke Flutter
         return response()->json([
             'success' => true,
             'message' => 'Profil berhasil diperbarui!',
@@ -137,11 +127,10 @@ class AuthApiController extends Controller
 
     public function changePassword(Request $request)
     {
-        // 1. Validasi input dari Flutter
+        // 1. Validasi input dari Flutter 
         $validator = Validator::make($request->all(), [
-            'nik'          => 'required',
             'old_password' => 'required',
-            'new_password' => 'required|string|min:6', // Minimal password baru 6 karakter
+            'new_password' => 'required|string|min:6', 
         ]);
 
         if ($validator->fails()) {
@@ -151,27 +140,10 @@ class AuthApiController extends Controller
             ], 422);
         }
 
-        // 2. Cari NIK di tabel pic_details
-        $picDetail = PicDetail::where('nik', $request->nik)->first();
+        // 2. Ambil user yang sedang login secara langsung
+        $user = $request->user();
 
-        if (!$picDetail) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nomor Induk Karyawan (NIK) tidak ditemukan.'
-            ], 404);
-        }
-
-        // 3. Ambil data User berdasarkan relasi id_user
-        $user = User::where('id', $picDetail->id_user)->first();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akun tidak ditemukan.'
-            ], 404);
-        }
-
-        // 4. VALIDASI: Cocokkan kata sandi lama dengan yang ada di database
+        // 3. VALIDASI: Cocokkan kata sandi lama dengan yang ada di database
         if (!Hash::check($request->old_password, $user->password)) {
             return response()->json([
                 'success' => false,
@@ -179,11 +151,10 @@ class AuthApiController extends Controller
             ], 401);
         }
 
-        // 5. UPDATE PASSWORD BARU (Wajib di-hash pakai bcrypt)
+        // 4. UPDATE PASSWORD BARU (Wajib di-hash pakai bcrypt)
         $user->password = Hash::make($request->new_password);
         $user->save();
 
-        // 6. Respon Sukses
         return response()->json([
             'success' => true,
             'message' => 'Kata sandi berhasil diperbarui!'
