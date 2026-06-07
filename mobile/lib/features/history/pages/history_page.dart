@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'detail_waste_page.dart';
-import '../../report/pages/report_detail.dart';
-import 'package:mobile/core/constants/api_constants.dart';
+import '../services/history_service.dart';
+import '../widgets/history_card.dart';
+import '../widgets/filter_bottom_sheet.dart';
 
 class RiwayatPage extends StatefulWidget {
   const RiwayatPage({super.key});
@@ -13,11 +11,12 @@ class RiwayatPage extends StatefulWidget {
 }
 
 class _RiwayatPageState extends State<RiwayatPage> {
+  final _historyService = HistoryService();
+  
   Map<String, dynamic> _groupedRiwayat = {};
   List<dynamic> _categories = [];
   bool _isLoading = true;
 
-  // State untuk Filter & Search
   String _searchQuery = "";
   int? _selectedCategoryId;
   String _selectedCategoryName = "Semua";
@@ -25,95 +24,51 @@ class _RiwayatPageState extends State<RiwayatPage> {
   @override
   void initState() {
     super.initState();
-    _fetchRiwayat();
+    _getRiwayatData();
   }
 
-  Future<void> _fetchRiwayat() async {
+  Future<void> _getRiwayatData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
+
     try {
-      String url = "${ApiConstants.riwayatLaporan}?search=$_searchQuery";
-      
-      if (_selectedCategoryId != null) {
-        url += "&type=$_selectedCategoryId"; 
-      }
+      final resData = await _historyService.fetchRiwayatLaporan(
+        searchQuery: _searchQuery,
+        selectedCategoryId: _selectedCategoryId,
+      );
 
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final resData = json.decode(response.body);
-        if (mounted) {
-          setState(() {
-            _groupedRiwayat = resData['data'] ?? {};
-            _categories = resData['categories'] ?? [];
-            _isLoading = false;
-          });
-        }
-      } else {
-        if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _groupedRiwayat = Map<String, dynamic>.from(resData['data'] ?? {});
+          _categories = resData['categories'] ?? [];
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      debugPrint("Error Riwayat: $e");
+      debugPrint("Error get riwayat view: $e");
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // Bottom Sheet untuk memunculkan Filter Kategori Induk
-  void _showFilterBottomSheet() {
+  void _openFilterSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Filter Berdasarkan Kategori",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF264653)),
-              ),
-              const SizedBox(height: 15),
-              // Opsi Tampilkan Semua
-              ListTile(
-                title: const Text("Semua Kategori"),
-                trailing: _selectedCategoryId == null ? const Icon(Icons.check, color: Color(0xFF14A38B)) : null,
-                onTap: () {
-                  setState(() {
-                    _selectedCategoryId = null;
-                    _selectedCategoryName = "Semua";
-                  });
-                  Navigator.pop(context);
-                  _fetchRiwayat();
-                },
-              ),
-              const Divider(),
-              // Render list kategori dinamis dari DB Laravel
-              Expanded(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final cat = _categories[index];
-                    return ListTile(
-                      title: Text(cat['name']),
-                      trailing: _selectedCategoryId == cat['id'] ? const Icon(Icons.check, color: Color(0xFF14A38B)) : null,
-                      onTap: () {
-                        setState(() {
-                          _selectedCategoryId = cat['id'];
-                          _selectedCategoryName = cat['name'];
-                        });
-                        Navigator.pop(context);
-                        _fetchRiwayat(); // Reload data sesuai kategori terpilih
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+        return FilterBottomSheet(
+          categories: _categories,
+          selectedCategoryId: _selectedCategoryId,
+          onCategorySelected: (id, name) {
+            setState(() {
+              _selectedCategoryId = id;
+              _selectedCategoryName = name;
+            });
+            Navigator.pop(context);
+            _getRiwayatData();
+          },
         );
       },
     );
@@ -125,7 +80,6 @@ class _RiwayatPageState extends State<RiwayatPage> {
     const bgLightColor = Color(0xFFF4F7F9);
     const darkBlueColor = Color(0xFF264653);
 
-    // Mengubah Map Keys menjadi List Tanggal untuk ListView.builder
     final tanggalList = _groupedRiwayat.keys.toList();
 
     return Scaffold(
@@ -133,253 +87,124 @@ class _RiwayatPageState extends State<RiwayatPage> {
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        title: const Padding(
-          padding: EdgeInsets.only(top: 15, left: 10),
-          child: Row(
-            children: [
-              Icon(Icons.bar_chart_rounded, color: Colors.white, size: 28),
-              SizedBox(width: 10),
-              Text(
-                'Riwayat Laporan',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ],
+        // Menurunkan posisi ikon bawaan tombol kembali
+        leading: Padding(
+          padding: const EdgeInsets.only(top: 10.0, left: 6.0),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
           ),
         ),
+        // Menurunkan posisi teks judul AppBar
+        title: const Padding(
+          padding: EdgeInsets.only(top: 12.0),
+          child: Text(
+            'Riwayat Laporan',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+          ),
+        ),
+        centerTitle: false,
       ),
       body: Column(
         children: [
-          // --- KOTAK CARI & FILTER ---
+          // Bar Pencarian & Tombol Filter Pendukung
           Container(
             color: primaryColor,
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
             child: Row(
               children: [
-                // Kolom Cari (Live Search)
                 Expanded(
-                  child: Container(
+                  child: SizedBox(
                     height: 45,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
                     child: TextField(
                       onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                        _fetchRiwayat(); // Otomatis tembak API tiap ketik huruf baru
+                        setState(() => _searchQuery = value);
+                        _getRiwayatData();
                       },
                       decoration: const InputDecoration(
-                        hintText: "Cari riwayat laporan...",
-                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-                        prefixIcon: Icon(Icons.search, color: Colors.grey),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                        hintText: "Cari riwayat aktivitas...",
+                        hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8), size: 20),
+                        contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Tombol Filter Premium
                 InkWell(
-                  onTap: _showFilterBottomSheet,
+                  onTap: _openFilterSheet,
+                  borderRadius: BorderRadius.circular(12),
                   child: Container(
                     height: 45,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    width: 45,
                     decoration: BoxDecoration(
-                      color: _selectedCategoryId != null ? Colors.orange : darkBlueColor,
-                      borderRadius: BorderRadius.circular(10),
+                      color: darkBlueColor,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
-                        const SizedBox(width: 6),
-                        Text(
-                          _selectedCategoryName,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                      ],
-                    ),
+                    child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
                   ),
-                ),
+                )
               ],
             ),
           ),
 
-          // --- DATA RENDERING ---
+          // Area Tampilan Data Log Berkelompok Tanggal
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: primaryColor))
                 : tanggalList.isEmpty
-                    ? const Center(child: Text("Riwayat laporan tidak ditemukan"))
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.history_toggle_off_rounded, size: 60, color: Colors.grey.shade400),
+                            const SizedBox(height: 12),
+                            const Text(
+                              "Tidak ada data riwayat ditemukan",
+                              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      )
                     : ListView.builder(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(16),
                         itemCount: tanggalList.length,
                         itemBuilder: (context, index) {
-                          String tanggalSection = tanggalList[index];
-                          List<dynamic> itemsDiTanggalIni = _groupedRiwayat[tanggalSection];
+                          final String tanggal = tanggalList[index];
+                          final List items = (_groupedRiwayat[tanggal] ?? []) as List;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildSectionTitle(tanggalSection),
-                              const SizedBox(height: 10),
-                              ...itemsDiTanggalIni.map((item) {
-                                // Logika penentuan icon berdasarkan teks subkategori
-                          
-
-                                // ... di dalam ListView.builder RiwayatPage ...
-                                String tipe = (item['type_log'] ?? '').toString(); // Aman dari null
-                                IconData icon = Icons.assignment_rounded;
-                                Color color = Colors.grey.shade700;
-                                Color bg = Colors.grey.shade100;
-                                String status = "Selesai";
-                                Color statusColor = Colors.green;
-
-                                if (tipe == 'input_masuk') {
-                                  icon = Icons.login_rounded;
-                                  color = Colors.blue.shade700;
-                                  bg = const Color(0xFFE3F2FD);
-                                } else if (tipe == 'input_keluar') {
-                                  icon = Icons.logout_rounded;
-                                  color = Colors.purple.shade700;
-                                  bg = const Color(0xFFF3E5F5);
-                                } else if (tipe == 'olahan') {
-                                  icon = Icons.auto_awesome_rounded;
-                                  color = const Color(0xFF14A38B);
-                                  bg = const Color(0xFFE0F2F1);
-                                } else if (tipe == 'kendala') {
-                                  icon = Icons.warning_amber_rounded;
-                                  color = Colors.orange.shade800;
-                                  bg = const Color(0xFFFFF3E0);
-                                  status = "Diproses";
-                                  statusColor = Colors.orange;
-                                }
-
-                                return _buildRiwayatCard(
-                                  context: context,
-                                  idLaporan: item['id'] ?? 0, // Amankan ID jika null
-                                  typeLog: tipe,
-                                  title: (item['title'] ?? 'Tanpa Judul').toString(), // <--- AMAN DARI NULL
-                                  time: (item['time'] ?? '-').toString(),             // <--- AMAN DARI NULL
-                                  amount: (item['amount'] ?? '-').toString(),         // <--- AMAN DARI NULL
-                                  categoryIcon: icon,
-                                  iconBgColor: bg,
-                                  iconColor: color,
-                                  status: status,
-                                  statusColor: statusColor,
-                                );
-                              }),
-                              const SizedBox(height: 15),
+                              // Sub-Header label Kelompok Tanggal
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4, top: 12, bottom: 8),
+                                child: Text(
+                                  tanggal,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                    color: Color(0xFF64748B),
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                              
+                              // List Kartu Riwayat di tanggal yang bersangkutan
+                              ...items.map((item) => HistoryCard(item: item)).toList(),
+                              const SizedBox(height: 4),
                             ],
                           );
                         },
                       ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF64748B)),
-    );
-  }
-
-  Widget _buildRiwayatCard({
-    required BuildContext context,
-    required int idLaporan,
-    required String typeLog, // <--- TAMBAHKAN DI SINI
-    required String title,
-    required String time,
-    required String amount,
-    required IconData categoryIcon,
-    required Color iconBgColor,
-    required Color iconColor,
-    required String status,
-    required Color statusColor,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(10)),
-          child: Icon(categoryIcon, color: iconColor, size: 26),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF264653)),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Row(
-            children: [
-              Text(time, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-              const SizedBox(width: 8),
-              Container(
-                width: 4,
-                height: 4,
-                decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: statusColor.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
-                child: Text(
-                  status,
-                  style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              amount,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF14A38B)),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right, color: Colors.black26),
-          ],
-        ),
-        onTap: () {
-          // --- LOGIKA PERCABANGAN DI SINI ---
-          if (typeLog == 'kendala') {
-            // Jika type_log-nya kendala, arahkan ke halaman DetailKendalaPage
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DetailKendalaPage(reportId: idLaporan.toString()),
-              ),
-            );
-          } else {
-            // Jika type_log-nya yang lain (input_masuk, keluar, olahan), arahkan ke halaman sampah biasa
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DetailLaporanPage(idLaporan: idLaporan),
-              ),
-            );
-          }
-        },
       ),
     );
   }

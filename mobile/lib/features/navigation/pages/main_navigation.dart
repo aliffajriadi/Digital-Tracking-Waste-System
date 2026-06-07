@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../../dashboard/pages/dashboard_page.dart';
 import '../../settings/pages/setting_page.dart';
-import '../../waste_data/pages/waste_data.dart';
+import '../../waste_data/pages/waste_list_page.dart';
 import '../../history/pages/history_page.dart';
+
+import '../models/nav_item_model.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -14,39 +18,39 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const DashboardPage(),
-    const LaporanDataHarianPage(),
-    const RiwayatPage(),
-    const PengaturanPage(),
+  late final List<NavItemModel> _navItems = [
+    NavItemModel(
+      page: const DashboardPage(),
+      icon: Icons.home_filled,
+      label: 'Beranda',
+    ),
+    NavItemModel(
+      page: const LaporanDataHarianPage(),
+      icon: Icons.delete_outline,
+      label: 'Data Sampah',
+    ),
+    NavItemModel(
+      page: const RiwayatPage(),
+      icon: Icons.bar_chart_outlined,
+      label: 'Riwayat',
+    ),
+    NavItemModel(
+      page: const SettingsPage(),
+      icon: Icons.person_outline,
+      label: 'Pengaturan',
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Disamakan menjadi warna hijau pekat andalan kita
-    const primaryColor = Color(0xFF14A38B); 
-
     return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor, // Diubah ke hijau pekat biar serasi
-        unselectedItemColor: const Color(0xFF94A3B8),
+      body: _navItems[_currentIndex].page,
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
-        onTap: (int index) {
-          setState(() {
-            _currentIndex = index;
-          });
+        items: _navItems,
+        onTap: (index) {
+          setState(() => _currentIndex = index);
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Beranda'),
-          BottomNavigationBarItem(icon: Icon(Icons.delete_outline), label: 'Data Sampah'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined), label: 'Riwayat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Pengaturan'),
-        ],
       ),
     );
   }

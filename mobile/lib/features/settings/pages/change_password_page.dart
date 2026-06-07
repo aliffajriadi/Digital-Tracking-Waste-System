@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'package:mobile/core/constants/api_constants.dart';
+import '../services/password_service.dart';
+import '../widgets/password_input_field.dart';
 
 class PengaturanPasswordPage extends StatefulWidget {
   const PengaturanPasswordPage({super.key});
@@ -12,10 +11,10 @@ class PengaturanPasswordPage extends StatefulWidget {
 }
 
 class _PengaturanPasswordPageState extends State<PengaturanPasswordPage> {
-  // Controller dikosongkan agar siap menerima ketikan user
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _passwordService = PasswordService();
 
   bool _obscureOld = true;
   bool _obscureNew = true;
@@ -25,78 +24,72 @@ class _PengaturanPasswordPageState extends State<PengaturanPasswordPage> {
   @override
   void initState() {
     super.initState();
-    // Menambahkan listener agar UI warna background textfield berubah secara LIVE saat diketik
     _oldPasswordController.addListener(() => setState(() {}));
     _newPasswordController.addListener(() => setState(() {}));
     _confirmPasswordController.addListener(() => setState(() {}));
   }
 
-  // Fungsi Kirim Data Ganti Password ke API Laravel
   void _changePassword() async {
-    String oldPassword = _oldPasswordController.text.trim();
-    String newPassword = _newPasswordController.text.trim();
-    String confirmPassword = _confirmPasswordController.text.trim();
+    final oldPassword = _oldPasswordController.text.trim();
+    final newPassword = _newPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
 
-    // 1. Validasi Input di Sisi Flutter
     if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
-      _showSnackBar('Semua kolom wajib diisi!', Colors.redAccent);
+      _showSnackBar('Semua kolom wajib diisi!', backgroundColor: Colors.redAccent);
       return;
     }
 
     if (newPassword.length < 6) {
-      _showSnackBar('Kata sandi baru minimal harus 6 karakter!', Colors.redAccent);
+      _showSnackBar('Kata sandi baru minimal harus 6 karakter!', backgroundColor: Colors.redAccent);
       return;
     }
 
     if (newPassword != confirmPassword) {
-      _showSnackBar('Konfirmasi sandi baru tidak cocok!', Colors.redAccent);
+      _showSnackBar('Konfirmasi sandi baru tidak cocok!', backgroundColor: Colors.redAccent);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String nik = prefs.getString('user_nik') ?? '';
+      final response = await _passwordService.changePassword(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
 
-      String url = ApiConstants.changePassword;
-
-      final response = await http.post(
-        Uri.parse(url),
-        body: {
-          'nik': nik,
-          'old_password': oldPassword,
-          'new_password': newPassword,
-        },
-      ).timeout(const Duration(seconds: 10));
-
-      var responseData = jsonDecode(response.body);
+      final responseData = jsonDecode(response.body);
 
       setState(() => _isLoading = false);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
-        _showSnackBar('Kata sandi berhasil diubah!', const Color(0xFF14A38B));
+        _showSnackBar('Kata sandi berhasil diubah!', backgroundColor: Colors.green);
         
-        // Bersihkan form setelah sukses
         _oldPasswordController.clear();
         _newPasswordController.clear();
         _confirmPasswordController.clear();
         
         if (mounted) Navigator.pop(context);
       } else {
-        // Menampilkan pesan eror dari Laravel (misal: "Kata sandi lama salah")
-        _showSnackBar(responseData['message'] ?? 'Gagal mengubah kata sandi', Colors.redAccent);
+        final errorMsg = response.statusCode == 401
+            ? 'Sesi habis, silakan login kembali.'
+            : (responseData['message'] ?? 'Gagal mengubah kata sandi');
+            
+        _showSnackBar(errorMsg, backgroundColor: Colors.redAccent);
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showSnackBar('Terjadi kesalahan koneksi: $e', Colors.redAccent);
+      _showSnackBar('Terjadi kesalahan koneksi jaringan.', backgroundColor: Colors.redAccent);
     }
   }
 
-  void _showSnackBar(String message, Color color) {
+  void _showSnackBar(String message, {required Color backgroundColor}) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: color),
+        SnackBar(
+          content: Text(message),
+          backgroundColor: backgroundColor,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -114,7 +107,7 @@ class _PengaturanPasswordPageState extends State<PengaturanPasswordPage> {
     const primaryColor = Color(0xFF14A38B);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FA),
+      backgroundColor: const Color(0xFFF4F7F9),
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
@@ -123,8 +116,12 @@ class _PengaturanPasswordPageState extends State<PengaturanPasswordPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Pengaturan Password',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          'Pengaturan Keamanan',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         centerTitle: false,
       ),
@@ -140,90 +137,116 @@ class _PengaturanPasswordPageState extends State<PengaturanPasswordPage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 15,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFD1F2EC),
-                            borderRadius: BorderRadius.circular(10),
+                    // --- HEADER INFORMASI BARU ---
+                    Center(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2F9F3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.security_rounded,
+                              color: primaryColor,
+                              size: 32,
+                            ),
                           ),
-                          child: const Icon(Icons.lock_open_rounded, color: primaryColor, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Ganti Kata Sandi',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Ubah Kata Sandi',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Demi keamanan akun Anda, pastikan kata sandi baru sulit ditebak dan tidak digunakan untuk layanan lain.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
-                    // KATA SANDI LAMA
-                    _buildInputField(
+                    // --- FORM INPUT UTAMA ---
+                    PasswordInputField(
                       label: 'KATA SANDI LAMA',
                       controller: _oldPasswordController,
                       obscureText: _obscureOld,
-                      hasValue: _oldPasswordController.text.isNotEmpty, // Otomatis True jika ada teks
-                      onToggleVisibility: () => setState(() => _obscureOld = !_obscureOld),
+                      hasValue: _oldPasswordController.text.isNotEmpty,
+                      onToggleVisibility: () =>
+                          setState(() => _obscureOld = !_obscureOld),
                     ),
                     const SizedBox(height: 20),
-
-                    // KATA SANDI BARU
-                    _buildInputField(
+                    PasswordInputField(
                       label: 'KATA SANDI BARU',
                       controller: _newPasswordController,
                       obscureText: _obscureNew,
-                      hasValue: _newPasswordController.text.isNotEmpty, // Otomatis True jika ada teks
-                      onToggleVisibility: () => setState(() => _obscureNew = !_obscureNew),
+                      hasValue: _newPasswordController.text.isNotEmpty,
+                      onToggleVisibility: () =>
+                          setState(() => _obscureNew = !_obscureNew),
                     ),
                     const SizedBox(height: 20),
-
-                    // KONFIRMASI SANDI BARU
-                    _buildInputField(
+                    PasswordInputField(
                       label: 'KONFIRMASI SANDI BARU',
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirm,
-                      hasValue: _confirmPasswordController.text.isNotEmpty, // Otomatis True jika ada teks
-                      onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                      hasValue: _confirmPasswordController.text.isNotEmpty,
+                      onToggleVisibility: () =>
+                          setState(() => _obscureConfirm = !_obscureConfirm),
                     ),
-                    const SizedBox(height: 24),
-
-                    // Tombol Simpan
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: SizedBox(
-                        width: 120,
-                        height: 38,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _changePassword, // Disabled saat loading
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    const SizedBox(height: 32),
+                    
+                    // --- TOMBOL SIMPAN ---
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _changePassword,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                )
-                              : const Text(
-                                  'Simpan',
-                                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
-                                ),
                         ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Simpan Perubahan',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -233,56 +256,6 @@ class _PengaturanPasswordPageState extends State<PengaturanPasswordPage> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildInputField({
-    required String label,
-    required TextEditingController controller,
-    required bool obscureText,
-    required bool hasValue,
-    required VoidCallback onToggleVisibility,
-  }) {
-    const primaryColor = Color(0xFF14A38B);
-    const filledGrey = Color(0xFFE9ECF0);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF8A99A8), letterSpacing: 0.5),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: hasValue ? primaryColor : filledGrey,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: obscureText,
-            cursorColor: hasValue ? Colors.white : Colors.black87,
-            style: TextStyle(
-              color: hasValue ? Colors.white : Colors.black87,
-              fontSize: 14,
-              letterSpacing: obscureText ? 3.0 : 1.0,
-            ),
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: InputBorder.none,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  obscureText ? Icons.visibility_off_rounded : Icons.remove_red_eye_rounded,
-                  color: hasValue ? Colors.white.withOpacity(0.9) : primaryColor,
-                  size: 20,
-                ),
-                onPressed: onToggleVisibility,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

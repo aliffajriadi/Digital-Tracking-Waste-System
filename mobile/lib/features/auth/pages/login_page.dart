@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/login_form.dart';
+import '../widgets/login_form.dart'; // Path relatif yang bersih
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -12,6 +12,7 @@ class LoginPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF4F7FA),
       body: Stack(
         children: [
+          // Background dekorasi lingkaran atas
           Positioned(
             top: -screenHeight * 0.35,
             left: -200,
@@ -25,7 +26,7 @@ class LoginPage extends StatelessWidget {
             ),
           ),
 
-          // Konten Utama di Tengah Screen
+          // Konten Utama Form Login
           Center(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -43,7 +44,6 @@ class LoginPage extends StatelessWidget {
                     )
                   ],
                 ),
-                // Memanggil Komponen Form yang Terpisah
                 child: const LoginForm(), 
               ),
             ),

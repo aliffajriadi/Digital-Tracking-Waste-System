@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mobile/core/constants/api_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DetailLaporanPage extends StatefulWidget {
   final int idLaporan; // Terima ID dari halaman list data
@@ -24,9 +25,20 @@ class _DetailLaporanPageState extends State<DetailLaporanPage> {
 
   Future<void> _fetchDetailLaporan() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('token');
       // Ambil data berdasarkan idLaporan yang dikirim dari halaman sebelumnya
       final url = "${ApiConstants.laporanHarian}/${widget.idLaporan}";
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5)); //cek
+
+      // 4. KIRIM DENGAN HEADER AUTHENTICATION
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token', // <--- Kuncinya ada di sini!
+        },
+      ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final resData = json.decode(response.body);
@@ -37,6 +49,8 @@ class _DetailLaporanPageState extends State<DetailLaporanPage> {
           });
         }
       } else {
+        // Print status code untuk mempermudah pelacakan (misal 401 Unauthorized)
+        debugPrint("Gagal memuat. Status Code: ${response.statusCode}");
         if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {

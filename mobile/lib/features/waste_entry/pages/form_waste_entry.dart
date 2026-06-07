@@ -20,6 +20,7 @@ class InputSampahPage extends StatefulWidget {
 class _InputSampahPageState extends State<InputSampahPage> {
   final _kuantitasController = TextEditingController();
   final _catatanController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   List<dynamic> _sumberLokasiList = [];
   Map<String, dynamic>? _selectedSumberLocation;
@@ -48,6 +49,7 @@ class _InputSampahPageState extends State<InputSampahPage> {
   Future<void> _fetchSourceLocations() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+
       final token = prefs.getString('token') ?? '';
 
       final response = await http.get(
@@ -66,6 +68,8 @@ class _InputSampahPageState extends State<InputSampahPage> {
             _isLoadingLocations = false;
           });
         }
+      } else {
+        setState(() => _isLoadingLocations = false);
       }
     } catch (e) {
       debugPrint("Gagal mengambil data lokasi: $e");
@@ -122,7 +126,7 @@ class _InputSampahPageState extends State<InputSampahPage> {
 
   // --- SIMPAN DATA (POST MULTIPART TO LARAVEL) ---
   Future<void> _simpanDataLaporan() async {
-    // Validasi Inputan Wajib
+    // Validasi inputan wajib
     if (_selectedSumberLocation == null) {
       _showSnackbar("Silakan pilih sumber lokasi sampah terlebih dahulu!");
       return;
@@ -136,14 +140,17 @@ class _InputSampahPageState extends State<InputSampahPage> {
       return;
     }
 
+    // Biar user tidak bisa pencet tombol simpan berkali-kali saat proses kirim
+    if (_isSubmitting) return;
+
     setState(() => _isSubmitting = true);
 
     try {
       final prefs = await SharedPreferences.getInstance();
+
       final token = prefs.getString('token') ?? '';
 
-      // Set endpoint transaksi waste entry
-      var uri = Uri.parse(ApiConstants.wasteEntry); // Endpoint POST untuk menyimpan data sampah masuk
+      var uri = Uri.parse(ApiConstants.wasteEntry); 
       var request = http.MultipartRequest('POST', uri);
 
       // Header Token Authentication
@@ -152,17 +159,18 @@ class _InputSampahPageState extends State<InputSampahPage> {
         'Accept': 'application/json',
       });
 
-      // Data Form Fields Text
+      // Data Form Fields Text (Ubah koma ke titik jika user input desimal pakai koma)
+      String kuantitas = _kuantitasController.text.replaceAll(',', '.');
+
       request.fields['id_waste_sub_category'] = widget.selectedSubCategory['id'].toString();
       request.fields['id_source_location_waste'] = _selectedSumberLocation!['id'].toString();
-      request.fields['measured_qty'] = _kuantitasController.text;
+      request.fields['measured_qty'] = kuantitas;
       request.fields['notes'] = _catatanController.text;
-      // Format DateTime ke string standar database SQL (YYYY-MM-DD HH:mm:ss)
       request.fields['created_at'] = DateFormat('yyyy-MM-dd HH:mm:ss').format(_waktuTerpilih);
 
       // Lampirkan File Gambar Bukti Foto
       request.files.add(await http.MultipartFile.fromPath(
-        'photo', // Menyesuaikan field file di controller Laravel
+        'photo', 
         _buktiFoto!.path,
       ));
 
@@ -170,8 +178,14 @@ class _InputSampahPageState extends State<InputSampahPage> {
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        _showSnackbar("Data transaksi sampah berhasil disimpan!");
-        Navigator.pop(context, true); // Kembali dan trigger refresh halaman sebelumnya
+        _showSnackbar("Data transaksi sampah berhasil disimpan!", backgroundColor: Colors.green);
+        
+        // Kasih delay 1 detik biar snackbar terbaca sebelum halaman ditutup
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            Navigator.pop(context, true); // Kembali dan trigger refresh
+          }
+        });
       } else {
         final errorLog = json.decode(response.body);
         _showSnackbar("Gagal menyimpan: ${errorLog['message'] ?? response.statusCode}");
@@ -179,18 +193,20 @@ class _InputSampahPageState extends State<InputSampahPage> {
     } catch (e) {
       _showSnackbar("Terjadi kesalahan jaringan. Gagal terhubung ke server.");
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
-  void _showSnackbar(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  void _showSnackbar(String msg, {Color? backgroundColor}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: backgroundColor));
   }
 
   // --- MODAL DIALOG DROP-DOWN STYLISH UNTUK SUMBER LOKASI ---
   void _showSumberLokasiBottomSheet() {
     if (_isLoadingLocations) {
-      _showSnackbar("Sedang memuat data lokasi, tunggu sebentar...");
+      _showSnackbar("Sedang memuat data lokasi, tunggu sebentar...", backgroundColor: Colors.blue);
       return;
     }
 
@@ -256,8 +272,11 @@ class _InputSampahPageState extends State<InputSampahPage> {
     }
 
     // Pengecekan data B3 khusus (Kondisional UI)
-    bool isB3 = subKat['id_waste_b3_detail'] != null || subKat['id_waste_category'] == 3;
-    String? b3Code = subKat['b3_detail'] != null ? subKat['b3_detail']['waste_code'] : null;
+    bool isB3 = subKat['id_waste_b3_detail'] != null || subKat['id_waste_category'].toString() == '3'; // Asumsikan semua sub-kategori bisa jadi B3, nanti cek di dalamnya
+    String? b3Code;
+    if (isB3 && subKat['b3_detail'] != null && subKat['b3_detail'] is Map) {
+      b3Code = subKat['b3_detail']['waste_code']?.toString();
+    }
 
     return Scaffold(
       backgroundColor: bgLightColor,
@@ -265,196 +284,229 @@ class _InputSampahPageState extends State<InputSampahPage> {
         backgroundColor: primaryColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Input Sampah Masuk', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text('Input Sampah Masuk', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
       ),
+      
+      // 1. BODY: KHUSUS FORM YANG BISA DI-SCROLL
       body: _isSubmitting
-          ? const Center(child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(color: primaryColor),
-                SizedBox(height: 12),
-                Text("Menyimpan data entry ke server...", style: TextStyle(color: darkBlueColor, fontWeight: FontWeight.w600))
-              ],
-            ))
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: primaryColor),
+                  SizedBox(height: 12),
+                  Text("Menyimpan data entry ke server...", style: TextStyle(color: darkBlueColor, fontWeight: FontWeight.w600))
+                ],
+              ),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. INFO JENIS SAMPAH TERPILIH
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.black12),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. INFO JENIS SAMPAH TERPILIH
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.black12),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 55,
+                            height: 55,
+                            decoration: BoxDecoration(color: const Color(0xFFE9F5F3), borderRadius: BorderRadius.circular(10)),
+                            child: const Icon(Icons.restore_from_trash_rounded, color: primaryColor, size: 30),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(subKatName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: darkBlueColor)),
+                                const SizedBox(height: 4),
+                                
+                                // CHIP KHUSUS B3
+                                if (isB3)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.red.shade200)),
+                                    child: Text(
+                                      "Kategori Bahaya B3: ${b3Code ?? 'Terdata'}",
+                                      style: TextStyle(color: Colors.red.shade800, fontSize: 11, fontWeight: FontWeight.bold),
+                                    ),
+                                  )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 55,
-                          height: 55,
-                          decoration: BoxDecoration(color: const Color(0xFFE9F5F3), borderRadius: BorderRadius.circular(10)),
-                          child: const Icon(Icons.restore_from_trash_rounded, color: primaryColor, size: 30),
+                    const SizedBox(height: 20),
+
+                    // 2. WAKTU TRANSAKSI
+                    _buildLabel("Waktu Pengisian / Transaksi"),
+                    InkWell(
+                      onTap: () => _pilihWaktu(context),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black12)),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_month_rounded, color: primaryColor, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(child: Text(DateFormat('dd MMM yyyy, HH:mm').format(_waktuTerpilih) + " WIB", style: const TextStyle(fontWeight: FontWeight.w600, color: darkBlueColor))),
+                            const Icon(Icons.edit_calendar_rounded, color: Colors.grey, size: 18),
+                          ],
                         ),
-                        const SizedBox(width: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 3. SELEKSI SUMBER LOKASI
+                    _buildLabel("Sumber Lokasi Sampah"),
+                    InkWell(
+                      onTap: _showSumberLokasiBottomSheet,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black12)),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.location_on_rounded, color: primaryColor, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _selectedSumberLocation == null ? "Pilih lokasi sumber sampah..." : _selectedSumberLocation!['name'],
+                                style: TextStyle(fontWeight: FontWeight.w600, color: _selectedSumberLocation == null ? Colors.grey : darkBlueColor),
+                              ),
+                            ),
+                            const Icon(Icons.arrow_drop_down_circle_rounded, color: Colors.grey, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 4. KUANTITAS BERDASARKAN SATUAN
+                    _buildLabel("Kuantitas Data Sampah"),
+                    Row(
+                      children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(subKatName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: darkBlueColor)),
-                              const SizedBox(height: 4),
-                              
-                              // CHIP KHUSUS B3: Hanya merender widget ini jika sampah terdeteksi jenis B3
-                              if (isB3)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.red.shade200)),
-                                  child: Text(
-                                    "Kategori Bahaya B3: ${b3Code ?? 'Terdata'}",
-                                    style: TextStyle(color: Colors.red.shade800, fontSize: 11, fontWeight: FontWeight.bold),
-                                  ),
-                                )
-                            ],
+                          child: Container(
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
+                            child: TextField(
+                              controller: _kuantitasController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: InputDecoration(
+                                hintText: "0.00",
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                suffixText: unitSymbol,
+                                suffixStyle: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF14A38B)),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Material(
+                          color: const Color(0xFF14A38B),
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: () => _showSnackbar("Menghubungkan ke timbangan..."),
+                            borderRadius: BorderRadius.circular(12),
+                            child: const Padding(
+                              padding: EdgeInsets.all(15),
+                              child: Icon(Icons.scale_rounded, color: Colors.white),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                  // 2. WAKTU TRANSAKSI
-                  _buildLabel("Waktu Pengisian / Transaksi"),
-                  InkWell(
-                    onTap: () => _pilihWaktu(context),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black12)),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_month_rounded, color: primaryColor, size: 20),
-                          const SizedBox(width: 12),
-                          Expanded(child: Text(DateFormat('dd MMM yyyy, HH:mm').format(_waktuTerpilih) + " WIB", style: const TextStyle(fontWeight: FontWeight.w600, color: darkBlueColor))),
-                          const Icon(Icons.edit_calendar_rounded, color: Colors.grey, size: 18),
-                        ],
+                    // 5. UPLOAD BUKTI FOTO
+                    _buildLabel("Upload Bukti Foto Fisik"),
+                    InkWell(
+                      onTap: _ambilFotoBukti,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: double.infinity,
+                        height: 160,
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black12)),
+                        child: _buktiFoto != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(_buktiFoto!, fit: BoxFit.cover, width: double.infinity),
+                              )
+                            : const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.camera_alt_rounded, size: 44, color: Colors.grey),
+                                  SizedBox(height: 8),
+                                  Text("Buka Kamera PIC", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+                                ],
+                              ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // 3. SELEKSI SUMBER LOKASI
-                  _buildLabel("Sumber Lokasi Sampah"),
-                  InkWell(
-                    onTap: _showSumberLokasiBottomSheet,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
+                    // 6. CATATAN PIC
+                    _buildLabel("Catatan Lapangan PIC (Opsional)"),
+                    Container(
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black12)),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.location_on_rounded, color: primaryColor, size: 20),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _selectedSumberLocation == null ? "Pilih lokasi sumber sampah..." : _selectedSumberLocation!['name'],
-                              style: TextStyle(fontWeight: FontWeight.w600, color: _selectedSumberLocation == null ? Colors.grey : darkBlueColor),
-                            ),
-                          ),
-                          const Icon(Icons.arrow_drop_down_circle_rounded, color: Colors.grey, size: 20),
-                        ],
+                      child: TextField(
+                        controller: _catatanController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(hintText: "Tulis kondisi sampah atau catatan di sini...", border: InputBorder.none, contentPadding: EdgeInsets.all(16)),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 10), 
+                    // Jarak penutup form aman agar isi scroll tidak terpotong ke bawah
+                  ],
+                ),
+              ),
+            ),
 
-                  // 4. KUANTITAS BERDASARKAN SATUAN UKUR MASTER DATA (Kg/L/Dlll)
-                  _buildLabel("Kuantitas Data Sampah"),
-                  Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black12)),
-                    child: TextField(
-                      controller: _kuantitasController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: darkBlueColor),
-                      decoration: InputDecoration(
-                        hintText: "0.00",
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.all(16),
-                        suffixText: unitSymbol, // SATUAN OTOMATIS BERUBAH SESUAI PILIHAN DATABASE
-                        suffixStyle: const TextStyle(fontWeight: FontWeight.bold, color: primaryColor, fontSize: 16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 5. UPLOAD BUKTI FOTO KAMERA
-                  _buildLabel("Upload Bukti Foto Fisik"),
-                  InkWell(
-                    onTap: _ambilFotoBukti,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: double.infinity,
-                      height: 160,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black12)),
-                      child: _buktiFoto != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(_buktiFoto!, fit: BoxFit.cover, width: double.infinity),
-                            )
-                          : const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.camera_alt_rounded, size: 44, color: Colors.grey),
-                                SizedBox(height: 8),
-                                Text("Buka Kamera PIC", style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 6. CATATAN PIC
-                  _buildLabel("Catatan Lapangan PIC (Opsional)"),
-                  Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black12)),
-                    child: TextField(
-                      controller: _catatanController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(hintText: "Tulis kondisi sampah atau catatan di sini...", border: InputBorder.none, contentPadding: EdgeInsets.all(16)),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // ACTION BUTTONS
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: const BorderSide(color: Colors.grey),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: const Text("Batal", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+      // 2. BOTTOM NAV BAR: TOMBOL NETAP DI BAWAH & AMAN DARI NAVIGASI HP ASLI
+      bottomNavigationBar: _isSubmitting 
+          ? null 
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16, top: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: Colors.grey),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
+                        child: const Text("Batal", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _simpanDataLaporan,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: const Text("Simpan Data", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _simpanDataLaporan,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
+                        child: const Text("Simpan Data", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
     );

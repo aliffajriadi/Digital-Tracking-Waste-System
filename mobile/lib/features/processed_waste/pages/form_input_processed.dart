@@ -52,6 +52,7 @@ class _FormInputOlahanPageState extends State<FormInputOlahanPage> {
   // --- FUNGSI KIRIM DATA (POST) KE LARAVEL ---
   Future<void> _simpanDataOlahan() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_isSaving) return;
 
     setState(() => _isSaving = true);
 
@@ -62,6 +63,8 @@ class _FormInputOlahanPageState extends State<FormInputOlahanPage> {
 
       // 2. Siapkan Endpoint URL (Gunakan variabel global)
       var url = Uri.parse('${ApiConstants.baseUrl}/processed-waste-data');
+
+      String kuantitas = _kuantitasController.text.replaceAll(',', '.');
 
       // 3. Format tanggal ke format standar database MySQL (YYYY-MM-DD HH:MM:SS)
       String formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(_waktuTerpilih);
@@ -88,7 +91,9 @@ class _FormInputOlahanPageState extends State<FormInputOlahanPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(backgroundColor: Colors.green, content: Text('Data olahan berhasil disimpan!')),
         );
-        Navigator.pop(context); // Kembali ke halaman grid menu olahan
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) Navigator.pop(context, true); // Balik ke halaman sebelumnya & bawa sinyal true (untuk refresh)
+        });
       } else {
         String pesanError = responseData['message'] ?? 'Gagal menyimpan data';
         _showErrorDialog(pesanError);

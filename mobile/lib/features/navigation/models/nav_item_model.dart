@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
-class MenuItemModel {
+class NavItemModel {
+  final Widget page;
   final IconData icon;
   final String label;
-  final bool badge;
-  final VoidCallback onTap;
 
-  MenuItemModel({
+  const NavItemModel({
+    required this.page,
     required this.icon,
     required this.label,
-    this.badge = false,
-    required this.onTap,
   });
 }

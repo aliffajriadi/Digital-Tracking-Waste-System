@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/auth/pages/login_page.dart'; 
+import 'core/theme/app_theme.dart';
+import 'features/auth/pages/login_page.dart';
 
 void main() {
   runApp(const WasteTrackApp());
@@ -11,12 +12,10 @@ class WasteTrackApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, 
+      debugShowCheckedModeBanner: false,
       title: 'WasteTrack',
-      theme: ThemeData(
-        primarySwatch: Colors.teal, 
-      ),
-      home: const LoginPage(), 
+      theme: AppTheme.lightTheme,
+      home: const LoginPage(),
     );
   }
 }
